@@ -2,6 +2,23 @@
 
 `control-plane` は、人間が意図・制約・品質基準を定義し、AIエージェントがその境界内で安全に実装・検証・レビューするための開発テンプレートです。
 
+## Current Phase
+
+現在はTemplate / Workflow hardeningを終え、CLI化の **Bootstrap Preparation / Architecture Gate Pending** に入っています。
+
+初期CLIの対象は次の3コマンドです。
+
+- `control-plane init`
+- `control-plane doctor`
+- `control-plane check`
+
+ただしCLIはまだ未実装です。Repository / Template structure と CLI implementation technology は `Proposed` ADRとして検討中で、Architecture Gate承認前にScaffoldやRepository移動は行いません。
+
+- Repository structure proposal: `docs/architecture/adr/0001-separate-template-assets.md`
+- CLI technology decision: `docs/architecture/adr/0002-cli-implementation-technology.md`
+
+`control-plane.yml`、Project Profile、Plugin system、Subagentsは初期CLI MVPの必須要素にせず、必要性が実証されてから検討します。
+
 ## Quick Tour
 
 まずは `examples/file-organizer/` を順番に見ると、Control Plane の基本フローを短時間で把握できます。
