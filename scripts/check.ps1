@@ -68,7 +68,7 @@ foreach ($heading in @("## Problem", "## Expected Outcome", "## Scope", "## Stak
     Require-Heading "docs/delivery/charter.md" $heading
 }
 
-foreach ($heading in @("## Confidence", "## Assumptions", "## Initial Cost", "## Running Cost", "## Total Estimate")) {
+foreach ($heading in @("## Confidence", "## Assumptions", "## Delivery Effort", "## Rate", "## Initial Cost", "## Running Cost", "## Total Estimate")) {
     Require-Heading "docs/delivery/estimate.md" $heading
 }
 
@@ -94,27 +94,27 @@ Get-ChildItem "docs/architecture/adr" -File -Filter "*.md" | ForEach-Object {
 
 Write-Host "ADR naming: OK"
 
-if (Test-Path "package.json") {
-    $package = Get-Content "package.json" -Raw | ConvertFrom-Json
-    $scripts = @()
-    if ($null -ne $package.scripts) {
-        $scripts = @($package.scripts.PSObject.Properties.Name)
-    }
-
-    $packageManager =
-        if (Test-Path "pnpm-lock.yaml") { "pnpm" }
-        elseif (Test-Path "yarn.lock") { "yarn" }
-        else { "npm" }
-
-    foreach ($scriptName in @("lint", "typecheck", "test", "build")) {
-        if ($scripts -contains $scriptName) {
-            if ($packageManager -eq "npm") {
-                Invoke-Step $scriptName { npm run $scriptName }
-            } else {
-                Invoke-Step $scriptName { & $packageManager $scriptName }
-            }
+# The template repository intentionally contains TODO placeholders.
+# After Bootstrap replaces the root README with a project-specific README,
+# TODO markers in durable project docs mean the Bootstrap is incomplete.
+$firstReadmeLine = if (Test-Path "README.md") { Get-Content "README.md" -TotalCount 1 } else { "" }
+if ($firstReadmeLine -ne "# control-plane") {
+    $placeholderPaths = @("ARCHITECTURE.md", "docs/product", "docs/delivery")
+    $matches = @()
+    foreach ($path in $placeholderPaths) {
+        if (Test-Path $path) {
+            $matches += Get-ChildItem $path -Recurse -File -Filter "*.md" | Select-String -Pattern 'TODO:'
         }
     }
+    if ($matches.Count -gt 0) {
+        $matches | ForEach-Object { Write-Host $_ }
+        throw "Bootstrap placeholders remain in project documentation."
+    }
+    Write-Host "Bootstrap placeholders: OK"
+}
+
+if (Test-Path "scripts/check-project.ps1") {
+    Invoke-Step "project validation (PowerShell)" { & "scripts/check-project.ps1" }
 }
 
 Write-Host "`nValidation complete."

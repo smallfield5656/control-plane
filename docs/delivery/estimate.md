@@ -2,7 +2,7 @@
 
 工数・初期費用・運用費を、前提と不確実性を含めて管理するSSOT。
 
-単一の確定値ではなく、原則として **Range + Assumptions + Confidence** を示す。
+見積もりはまず **Effort Range + Assumptions + Confidence** で示す。単価が与えられている場合のみCostへ変換し、不明な単価を推測しない。
 
 ## Estimate Date
 
@@ -14,20 +14,24 @@ TODO: Low / Medium / High
 
 ## Assumptions
 
-- TODO: 人員単価、チーム人数、対象Platform、既存資産、外部Service利用量など
+- TODO: Team size、対象Platform、既存資産、外部Service利用量、既知の制約など
 
 ## Delivery Effort
 
-| Area | Range | Notes |
-|---|---:|---|
-| Engineering | TODO | |
-| QA / Verification | TODO | |
-| PM / Coordination | TODO | |
-| Security / Review | TODO | |
+| Area | Range | Unit | Notes |
+|---|---:|---|---|
+| Engineering | TODO | person-hours / person-days | |
+| QA / Verification | TODO | person-hours / person-days | |
+| PM / Coordination | TODO | person-hours / person-days | |
+| Security / Review | TODO | person-hours / person-days | |
+
+## Rate
+
+TODO: 単価が分かる場合のみ記載。不明なら `Not specified` とする。
 
 ## Initial Cost
 
-TODO: ¥X - ¥Y
+TODO: Rateが分かる場合のみ算出。不明なら `Not calculated` とする。
 
 ## Running Cost
 
@@ -39,12 +43,13 @@ TODO: ¥X - ¥Y
 
 ## Contingency
 
-TODO: 例 20%。不確実性に応じて設定する。
+TODO: 必要な場合のみ設定。不確実性が高い場合は理由も記載する。
 
 ## Total Estimate
 
-- Initial: TODO
-- Monthly: TODO
+- Effort: TODO
+- Initial Cost: TODO
+- Monthly Cost: TODO
 
 ## Scenario
 
@@ -52,7 +57,7 @@ TODO: 例 20%。不確実性に応じて設定する。
 
 ## Change Log
 
-見積もりが大きく変わった場合、金額だけでなく理由を残す。
+見積もりが大きく変わった場合、数値だけでなく前提・Scope・Riskのどれが変わったかを残す。
 
 | Date | Previous | Current | Reason |
 |---|---:|---:|---|

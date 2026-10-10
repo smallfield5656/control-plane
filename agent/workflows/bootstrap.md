@@ -14,6 +14,8 @@
 
 `docs/product/constraints.md` に platform、distribution、security、network、data、operations、team、cost、project stage を整理する。
 
+Constraint は技術選定より前に存在する外部条件・事業条件・運用条件を記録する。Python、Node.js、Tauri など、比較の結果として採用するTechnologyをConstraintへ先回りして書かない。
+
 ## 4. Delivery Framing
 
 `docs/delivery/` に、プロジェクト規模に応じて次を整理する。
@@ -24,6 +26,8 @@
 - `milestones.md`: Outcomes / Decision Gates / Target
 
 小規模な実験では内容を最小限にしてよい。過剰なプロセスを導入しない。
+
+見積もりはまず person-hours / person-days 等の Effort range と Confidence を示す。単価が与えられている場合のみCostへ変換し、不明な単価を推測しない。
 
 ## 5. Quality Attributes
 
@@ -65,21 +69,31 @@
 
 Spike には仮説、成功条件、測定値、結論を残す。
 
-## 9. Decision
+## 9. Decision / Architecture Gate
 
 長期的な影響がある技術選定は ADR に記録する。
 
-Budget / Risk / Timelineへの重大な影響がある場合は、必要なDecision Gateを通す。
+人間の承認が必要な判断は、承認前はADRを `Proposed` とする。Architecture Gateで承認されたら `Accepted`、却下されたら `Rejected` に更新する。方針変更時は新しいADRを作り、旧ADRを `Superseded` にする。
+
+Budget / Risk / Timelineへの重大な影響がある場合も、必要なDecision Gateを通す。
 
 ## 10. Current Architecture
 
-採用した現在状態を `ARCHITECTURE.md` に反映する。
+承認された現在状態を `ARCHITECTURE.md` に反映する。
 
 ## 11. Scaffold
 
 ここまで決まってからプロジェクトを生成する。
 
-最低限、test、lint、typecheck、build 等を `scripts/check.*` から実行可能にする。
+`scripts/check.*` はControl Plane共通の検証入口とする。採用技術固有の test / lint / typecheck / build 等は、必要なPlatformに応じて `scripts/check-project.sh` または `scripts/check-project.ps1` に置き、共通checkから呼び出す。
+
+両Platform用hookを形式的に揃える必要はない。実際に利用・検証するPlatformだけを用意する。
+
+## 12. Project README
+
+Bootstrap後は、ルート `README.md` をテンプレート説明ではなく、そのプロジェクト固有の入口へ置き換える。
+
+最低限、Purpose、Setup / Run、Validation、主要Documentationへの導線を示す。Control Plane固有の詳細は `AGENTS.md` と関連Workflowを正本として参照し、READMEへ重複させない。
 
 ## Bootstrap Completion Gate
 
@@ -87,9 +101,12 @@ Bootstrap完了と報告する前に次を確認する。
 
 - Product Goalが定義されている
 - 主要Requirements / Acceptance Criteriaが定義されている
-- Constraintsが整理されている
-- Scope / Estimate /主要Risks / Milestonesが必要な粒度で整理されている
+- ConstraintsがTechnology Decisionと分離されている
+- Scope / Effort Estimate /主要Risks / Milestonesが必要な粒度で整理されている
 - 主要なArchitecture / Technology decisionが説明できる
-- 必要なADRが作成されている
+- 人間承認が必要なADRはArchitecture Gateを通過し、状態が反映されている
 - `ARCHITECTURE.md` が現在状態を表している
-- `scripts/check.*` が実行可能である
+- ルート `README.md` がプロジェクト固有の入口になっている
+- 採用技術固有の検証が必要なら project validation hook が用意されている
+- Bootstrap文書に必須の `TODO:` が残っていない
+- `scripts/check.*` が成功する

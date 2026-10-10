@@ -54,7 +54,7 @@ for heading in "## Problem" "## Expected Outcome" "## Scope" "## Stakeholders" "
   require_heading "docs/delivery/charter.md" "$heading"
 done
 
-for heading in "## Confidence" "## Assumptions" "## Initial Cost" "## Running Cost" "## Total Estimate"; do
+for heading in "## Confidence" "## Assumptions" "## Delivery Effort" "## Rate" "## Initial Cost" "## Running Cost" "## Total Estimate"; do
   require_heading "docs/delivery/estimate.md" "$heading"
 done
 
@@ -83,25 +83,25 @@ done < <(find docs/architecture/adr -maxdepth 1 -type f -name '*.md' | sort)
 
 echo "ADR naming: OK"
 
-if [[ -f package.json ]]; then
-  if [[ -f pnpm-lock.yaml ]]; then
-    pm="pnpm"
-  elif [[ -f yarn.lock ]]; then
-    pm="yarn"
-  else
-    pm="npm"
+# The template repository intentionally contains TODO placeholders.
+# Once README.md is replaced with a project-specific README during Bootstrap,
+# remaining TODO markers in durable project docs indicate an incomplete Bootstrap.
+if [[ "$(head -n 1 README.md 2>/dev/null || true)" != "# control-plane" ]]; then
+  placeholder_paths=(
+    "ARCHITECTURE.md"
+    "docs/product"
+    "docs/delivery"
+  )
+  if grep -RIn --include='*.md' 'TODO:' "${placeholder_paths[@]}"; then
+    echo "Bootstrap placeholders remain in project documentation." >&2
+    exit 1
   fi
+  echo "Bootstrap placeholders: OK"
+fi
 
-  for script in lint typecheck test build; do
-    if node -e "const p=require('./package.json'); process.exit(p.scripts?.['$script'] ? 0 : 1)"; then
-      echo "==> $script"
-      if [[ "$pm" == "npm" ]]; then
-        npm run "$script"
-      else
-        "$pm" "$script"
-      fi
-    fi
-  done
+if [[ -f "scripts/check-project.sh" ]]; then
+  echo "==> project validation (shell)"
+  bash "scripts/check-project.sh"
 fi
 
 echo "Validation complete."
