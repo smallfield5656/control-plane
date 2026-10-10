@@ -33,6 +33,40 @@
 8. `scripts/check.ps1` または `scripts/check.sh` を実行する。
 9. 正本が変わった場合だけ documentation を更新する。
 
+## Review
+
+Reviewでは、細かな好みより先に変更の正しさと長期保守性を確認する。
+
+優先して確認する項目:
+
+1. Requirement / Acceptance Criteriaを満たしているか。
+2. Design / Architectureが妥当で、既存の境界を不必要に崩していないか。
+3. Scopeに対して不要なComplexityや抽象化を追加していないか。
+4. Testsが重要なBehaviorとRegression riskを適切なlevelで検証しているか。
+5. Security / Data / Operations / Deliveryへの影響が見落とされていないか。
+6. Durable truthが変わった場合、対応するSSOTだけが更新されているか。
+
+Blocking issueとNitを区別する。完璧さを要求するために小さな改善を止めず、変更後にcodebase全体の健全性が維持または改善されることを重視する。
+
+変更は可能な限り小さく、独立してレビュー可能な単位に保つ。
+
+## Security Review Triggers
+
+すべての変更にSecurity processを要求しない。次のような要素を新規導入・変更する場合は、実装前にSecurity impactを明示し、必要ならDecision Gateを設ける。
+
+- Authentication / Authorization
+- PII / sensitive data
+- Secrets / credentials
+- External network access
+- File upload / untrusted input
+- Command execution
+- Payment
+- Cryptography
+- Public API
+- Security / Compliance上重要なdata persistence
+
+Low-riskなlocal toolなど、Security exposureが実質的に増えない変更では追加文書を形式的に作らない。
+
 ## Decision Gate
 
 次のような重大影響がある場合は、実装前に人間の判断を求める。
@@ -51,3 +85,17 @@
 プロジェクト全体の検証入口は `scripts/check.*` に集約する。
 
 AI agent に複数の個別コマンドを覚えさせるのではなく、1つの安定した入口を提供する。
+
+Technology固有の test / lint / typecheck / build / E2E や、その実行に必要なpreflightは `scripts/check-project.*` 側の責務とする。Control Plane共通checkへPlaywrightなど特定Technologyの知識を持ち込まない。
+
+## CI
+
+CIでもLocalと同じValidation Entry Pointを使う。
+
+```text
+Local ─┐
+       ├─> scripts/check.*
+CI ────┘
+```
+
+Runtime、dependency、browser、OS package等のsetupはProject固有で構成する。CI workflowへtest / lint / buildの実行知識を重複させず、setup後の最終検証は `scripts/check.*` に委譲する。
