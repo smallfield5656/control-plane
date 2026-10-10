@@ -6,7 +6,7 @@
 
 ## Context
 
-`control-plane` は、AI-assisted developmentを制御するRepository contractと、その導入・診断を支援するCLIから構成する。
+`control-plane` は、AI-assisted developmentを制御するRepository contractと、その導入・診断・検証実行を支援するCLIから構成する。
 
 ADR-0001 / ADR-0002のArchitecture Gateを通過し、生成先Templateの正本を `template/` に分離し、初期CLIをTypeScript / Node.jsで実装する構成を採用した。
 
@@ -45,10 +45,10 @@ ADR-0001 / ADR-0002のArchitecture Gateを通過し、生成先Templateの正本
 
 - `control-plane init <directory>`
 - `control-plane doctor [directory]`
+- `control-plane check [directory]`
 
-まだ未実装:
+初期CLI MVPのOut of Scope:
 
-- `check`
 - `bootstrap`
 - `status`
 - `update`
@@ -61,6 +61,7 @@ ADR-0001 / ADR-0002のArchitecture Gateを通過し、生成先Templateの正本
 - `template/`: 生成先Project assetの正本
 - `packages/cli/src/init.ts`: Template展開
 - `packages/cli/src/doctor.ts`: Repository診断
+- `packages/cli/src/check.ts`: 既存Validation Entry Pointの選択と実行
 - `packages/cli/src/index.ts`: CLI command routing
 - `scripts/check.*`: control-plane productのValidation Entry Point
 - `scripts/check-project.*`: CLI + Template固有Validation
@@ -69,18 +70,20 @@ ADR-0001 / ADR-0002のArchitecture Gateを通過し、生成先Templateの正本
 ## Dependency Direction
 
 ```text
-Product / Architecture / Workflow contract
-                 ↓
-             template/
-                 ↓
-        CLI init / doctor
-                 ↓
-        Generated Project
+Product / Architecture / Workflow / Validation contract
+                         ↓
+                     template/
+                         ↓
+                CLI init / doctor / check
+                         ↓
+                  Generated Project
 ```
 
-CLIへTemplate本文やWorkflow truthを重複してhard-codeしない。
+CLIへTemplate本文、Workflow truth、Validation logicを重複してhard-codeしない。
 
 `doctor` は既存Repository contractを読む診断Interfaceであり、Bootstrap WorkflowそのものをCLIへ複製しない。
+
+`check` はProjectの `scripts/check.*` を選択・実行するだけで、Validation rule自体は保持しない。
 
 ## Data Flow
 
@@ -90,23 +93,27 @@ CLIへTemplate本文やWorkflow truthを重複してhard-codeしない。
 
 ### doctor
 
-`control-plane doctor [directory]` は対象Repositoryをread-onlyで確認する。
+`control-plane doctor [directory]` は対象Repositoryをread-onlyで確認し、必須asset、Bootstrap placeholder、Proposed ADR、Current Architecture、Project READMEから保守的に状態と次Actionを提示する。
 
-診断対象は以下に限定する。
+Validationは実行せず、成功を推測しない。
 
-- 必須Control Plane assetの存在
-- Product / Delivery文書の未完了placeholder
-- Proposed ADRの存在
-- Current Architectureの未確定状態
-- Project READMEがTemplateのまま残っていないか
+### check
 
-`doctor` はValidationを実行せず、Validation成功やBootstrap Completeを推測しない。文書上の準備が整った場合は `Ready for Validation` とし、次Actionとして `scripts/check.*` を案内する。
+`control-plane check [directory]` は対象Platformで利用可能な既存Validation Entry Pointを起動する。
 
-生成後のProjectは自身の `scripts/check.*` をValidation Entry Pointとして持つ。
+- Windows: `scripts/check.ps1` を優先
+- その他: `scripts/check.sh` を優先
+- preferred scriptがない場合、利用可能なもう一方へfallback
+- child processのstdout / stderrを継承
+- exit codeを呼び出し元へ伝播
+
+生成ProjectのValidation contractは引き続き `scripts/check.*` がSource of Truth。
 
 ## External Dependencies
 
 CLI development/buildにはNode.jsとnpmを利用する。
+
+Shell validationには実行Platform上の `bash`、PowerShell validationには `powershell.exe` または `pwsh` が必要になる。
 
 Core Template contractは特定のHosted serviceやAI vendorを必須としない。
 
