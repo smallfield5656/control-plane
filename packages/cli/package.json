@@ -1,17 +1,47 @@
 {
-  "name": "@control-plane/cli",
+  "name": "control-plane",
   "version": "0.1.0",
-  "private": true,
+  "description": "A lightweight engineering control plane for AI-assisted software projects.",
   "type": "module",
   "bin": {
     "control-plane": "dist/index.js"
   },
+  "files": [
+    "dist",
+    "template",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/smallfield5656/control-plane.git"
+  },
+  "bugs": {
+    "url": "https://github.com/smallfield5656/control-plane/issues"
+  },
+  "homepage": "https://github.com/smallfield5656/control-plane#readme",
+  "keywords": [
+    "ai",
+    "agent",
+    "cli",
+    "engineering",
+    "control-plane"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "npm run build && node --test tests/init.test.mjs tests/doctor.test.mjs tests/check.test.mjs"
+    "stage-template": "node scripts/stage-template.mjs",
+    "clean-template": "node scripts/clean-template.mjs",
+    "prepack": "npm run build && npm run stage-template",
+    "postpack": "npm run clean-template",
+    "test": "npm run build && node --test tests/init.test.mjs tests/doctor.test.mjs tests/check.test.mjs tests/package.test.mjs"
   },
   "devDependencies": {
-    "@types/node": "^24.0.0",
+    "@types/node": "^22.0.0",
     "typescript": "^5.9.0"
   }
 }
