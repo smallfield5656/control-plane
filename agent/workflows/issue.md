@@ -46,6 +46,8 @@ RequirementやConstraintを推測で変更してはならない。
 
 Cost / Risk / Timeline / Security / Architectureへの重大な影響がある場合は、実装前に人間の判断を求める。
 
+Security impactがある場合は `docs/operations/development.md` のSecurity Review Triggersを確認する。
+
 ## 5. Promote Durable Knowledge
 
 IssueやIssueコメント内で合意された永続情報は対応するSSOTへ反映する。
@@ -87,9 +89,13 @@ Pull Requestには最低限次を記載する。
 - What changed / Why
 - Source of Truth updates
 - Verification
+- Review focus
 - Architecture impact
+- Security / Data impact
 - Cost / Risk / Timeline impact
 - Remaining work
+
+Reviewは `docs/operations/development.md` のReview方針に従う。
 
 ## 9. Close
 
