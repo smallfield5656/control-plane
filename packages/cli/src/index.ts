@@ -1,19 +1,42 @@
 #!/usr/bin/env node
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { runProjectCheck } from "./check.js";
 import { doctorProject, formatDoctorReport } from "./doctor.js";
 import { initProject } from "./init.js";
 
 function usage(): string {
   return [
+    "control-plane - engineering control plane for AI-assisted projects",
+    "",
     "Usage:",
     "  control-plane init <directory>",
     "  control-plane doctor [directory]",
-    "  control-plane check [directory]"
+    "  control-plane check [directory]",
+    "  control-plane --help",
+    "  control-plane --version"
   ].join("\n");
+}
+
+async function version(): Promise<string> {
+  const here = path.dirname(fileURLToPath(import.meta.url));
+  const packageJson = JSON.parse(await readFile(path.resolve(here, "../package.json"), "utf8")) as { version?: string };
+  return packageJson.version ?? "unknown";
 }
 
 async function main(): Promise<void> {
   const [, , command, ...args] = process.argv;
+
+  if (!command || command === "--help" || command === "-h") {
+    console.log(usage());
+    return;
+  }
+
+  if (command === "--version" || command === "-v") {
+    console.log(await version());
+    return;
+  }
 
   if (command === "init") {
     const [target, ...rest] = args;
