@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { cp, mkdtemp, readdir, rename, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -7,6 +8,10 @@ export class InitError extends Error {}
 
 export function defaultTemplateDir(): string {
   const here = path.dirname(fileURLToPath(import.meta.url));
+  const packaged = path.resolve(here, "../template");
+  if (existsSync(packaged)) {
+    return packaged;
+  }
   return path.resolve(here, "../../../template");
 }
 
