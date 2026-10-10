@@ -1,15 +1,17 @@
-# control-plane
+# @smallfield5656/control-plane
 
 AI-assisted software projects向けのEngineering Control Plane CLIです。
 
 ## Quick Start
 
 ```bash
-npx control-plane init my-app
+npx @smallfield5656/control-plane init my-app
 cd my-app
-npx control-plane doctor .
-npx control-plane check .
+npx @smallfield5656/control-plane doctor .
+npx @smallfield5656/control-plane check .
 ```
+
+npm package名は `@smallfield5656/control-plane`、実行されるCLI bin名は `control-plane` です。
 
 `init` はControl Plane Templateを新規Directoryへ展開します。既存Directoryは上書きしません。
 

@@ -9,11 +9,13 @@ Repository contractと生成TemplateをDurable Truthとし、CLIはそれらを�
 npm公開後のGolden Pathはこれだけです。
 
 ```bash
-npx control-plane init my-app
+npx @smallfield5656/control-plane init my-app
 cd my-app
-npx control-plane doctor .
-npx control-plane check .
+npx @smallfield5656/control-plane doctor .
+npx @smallfield5656/control-plane check .
 ```
+
+npm packageは `@smallfield5656/control-plane`、CLI bin名は `control-plane` です。npmのunscoped package名 `control-plane` は既存package `controlplane` に近すぎるためregistryから拒否されるため、scoped packageを正式なdistribution identityとします。
 
 Fresh Templateでは `doctor` は通常 `Bootstrap In Progress` を返します。`AGENTS.md` をAI agentの入口として、`agent/workflows/bootstrap.md` に従ってProduct Goal / Requirements / Constraints / Delivery / Architectureを整理してください。
 
@@ -29,7 +31,7 @@ Fresh Templateでは `doctor` は通常 `Bootstrap In Progress` を返します�
 - `control-plane --help`
 - `control-plane --version`
 
-現在はv0.1.0のnpm Release Readinessを進めています。Repository cloneなしの `npx control-plane init my-app` を公開Golden Pathとします。
+現在はv0.1.0のnpm Release Readinessを進めています。Repository cloneなしの `npx @smallfield5656/control-plane init my-app` を公開Golden Pathとします。
 
 `bootstrap` / `status` / `update` はv0.1.0のOut of Scopeです。
 
