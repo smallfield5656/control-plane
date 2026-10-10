@@ -6,76 +6,95 @@
 
 ## Context
 
-`control-plane` は現在、AI-assisted developmentを制御するRepository Templateとして、Product / Delivery / Architecture / Testing / Workflow / ValidationのcontractをMarkdownとScriptで提供している。
+`control-plane` は、AI-assisted developmentを制御するRepository contractと、その導入を支援するCLIから構成する。
 
-CLI追加の準備を進めているが、Repository restructuringとCLI implementation technologyはArchitecture Gate未承認であり、現在Architectureにはまだ含めない。
+ADR-0001 / ADR-0002のArchitecture Gateを通過し、生成先Templateの正本を `template/` に分離し、初期CLIをTypeScript / Node.jsで実装する構成を採用した。
 
 ## Technology Stack
 
-現在のCore contractはTechnology-neutralなMarkdown、Git repository structure、Shell / PowerShell validation scriptで構成する。
-
-CLI implementation technologyは未決定。`docs/architecture/adr/0002-cli-implementation-technology.md` は `Proposed`。
+- Durable contract: Markdown / Git repository structure
+- Validation: Shell / PowerShell
+- CLI: TypeScript / Node.js
+- CLI build: TypeScript compiler
+- CLI tests: Node.js built-in test runner
 
 ## System Boundaries
 
-### Current
+### control-plane product repository
 
 - Product / Delivery / Architecture documentation
-- Agent workflows / skills
-- GitHub work-intake / PR templates
-- Technology-neutral validation entry point (`scripts/check.*`)
-- Completed example project
-
-### Proposed, not yet accepted
-
-- Generated project Template assetの `template/` への分離
+- Agent workflows / skills used to develop control-plane itself
 - `packages/cli/`
-- `control-plane init / doctor / check`
+- Product-level validation entry point (`scripts/check.*`)
+
+### Generated project template
+
+`template/` が `control-plane init` の唯一の生成Source。
+
+- `AGENTS.md`
+- `ARCHITECTURE.md`
+- `docs/`
+- `agent/`
+- `scripts/`
+- `.github/`
+- examples / placeholder source directories
+
+### CLI
+
+現在実装済み:
+
+- `control-plane init <directory>`
+
+まだ未実装:
+
+- `doctor`
+- `check`
+- `bootstrap`
+- `status`
+- `update`
 
 ## Components
 
 - `README.md`: 人間向け入口
-- `AGENTS.md`: AI agent向けrouter
-- `docs/product/`: Product Goal / Requirements / Constraints
-- `docs/delivery/`: Scope / Estimate / Risks / Milestones
-- `docs/architecture/`: Principles / ADR
-- `docs/testing/`: Testing Strategy
-- `docs/operations/`: Development / Review / Security / CI policy
-- `agent/`: Workflows / Skills
-- `scripts/check.*`: Control Plane validation entry point
-- `examples/`: Completed usage example
+- `AGENTS.md`: control-plane自身のAI agent router
+- `docs/`: control-plane自身のDurable Truth
+- `template/`: 生成先Project assetの正本
+- `packages/cli/`: CLI実装
+- `scripts/check.*`: control-plane productのValidation Entry Point
+- `scripts/check-project.*`: CLI + Template固有Validation
+- `examples/`: control-plane自身の完成例
 
 ## Dependency Direction
 
-Repository上のDurable Truthを中心にし、Agent / future CLIはそれを参照・操作する。
-
 ```text
-Product / Delivery / Architecture / Workflow / Validation contract
-                              ↓
-                    Agent / future CLI
+Product / Architecture / Workflow contract
+                 ↓
+             template/
+                 ↓
+          packages/cli init
+                 ↓
+        Generated Project
 ```
 
-CLIやVendor-specific設定をSource of Truthにしない。
+CLIへTemplate本文やWorkflow truthを重複してhard-codeしない。
 
 ## Data Flow
 
-現在はRepository filesを人間とAI agentが読み、Workflowに従って変更し、`scripts/check.*` で検証する。
+`control-plane init <directory>` は `template/` を読み、既存targetを上書きせず新しいDirectoryへ展開する。
 
-CLI導入後も、CLIが独自のWorkflow truthを持たず、Repository assetとValidation Entry Pointを利用する方針を提案している。
+生成後のProjectは自身の `scripts/check.*` をValidation Entry Pointとして持つ。
 
 ## External Dependencies
 
-Current core contractは特定のHosted serviceやAI vendorを必須としない。
+CLI development/buildにはNode.jsとnpmを利用する。
 
-GitHub Issue / Pull RequestはWork Intake / Proposed Changeとして利用できるが、Repository上のDurable Truthとは分離する。
+Core Template contractは特定のHosted serviceやAI vendorを必須としない。
 
 ## Constraints
 
 `docs/product/constraints.md` を参照してください。
 
-## Pending Architecture Decisions
+## Accepted Architecture Decisions
 
 - ADR-0001: `docs/architecture/adr/0001-separate-template-assets.md`
 - ADR-0002: `docs/architecture/adr/0002-cli-implementation-technology.md`
-
-いずれも `Proposed` であり、Architecture Gate承認前にRepository移動やCLI scaffoldを開始しない。
