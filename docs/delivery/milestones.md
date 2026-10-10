@@ -14,24 +14,24 @@
 | M6 | npm package contract + Template packaging | Package Gate | After M5 | Maintainer / Approver | Completed |
 | M7 | packed artifact integration test + CLI UX baseline | Review | After M6 | Maintainer | Completed |
 | M8 | Windows / Linux CI | CI Gate | After M7 | Maintainer | Completed |
-| M9 | Third-party Quick Start / clean-environment dogfood | Usability Gate | After M8 | Maintainer / Tester | In Progress |
-| M10 | v0.1.0 publish / GitHub Release | Release Gate | After M9 | Maintainer / Approver | Planned |
+| M9 | Third-party Quick Start / clean-environment dogfood | Usability Gate | After M8 | Maintainer / Tester | Completed |
+| M10 | v0.1.0 publish / GitHub Release | Release Gate | After M9 | Maintainer / Approver | Completed |
 
 ## Current Progress
 
 - `control-plane init / doctor / check` は実装・validation完了しmainへmerge済み。
-- npmのunscoped package名 `control-plane` は既存 `controlplane` に近すぎるためregistryに拒否された。正式なdistribution identityを `@smallfield5656/control-plane@0.1.0` へ変更する。
-- CLI bin名は引き続き `control-plane` とする。
-- Node.js support baselineは `>=22`。
-- root `template/` を唯一のSource of Truthとし、`npm pack` 時だけpackage artifactへstagingする方式を実装済み。
-- packed tarballを一時consumerへinstallし、`init → doctor → check → --version / --help` を実行するGolden Path testを追加済み。
-- GitHub ActionsでUbuntu / Windowsの双方が成功し、packed artifact Golden Pathを含む13 testsが通過済み。
-- READMEの公開Golden Pathは `npx @smallfield5656/control-plane init my-app` へ更新する。
-- 残るRelease blockerはscoped packageの実publishと、published packageからの最終dogfood。
+- npm packageは `@smallfield5656/control-plane@0.1.0` としてpublic publish済み。
+- CLI bin名は `control-plane`、Node.js support baselineは `>=22`。
+- root `template/` を唯一のSource of Truthとし、`npm pack` 時だけpackage artifactへstagingする。
+- packed tarball Golden PathとGitHub ActionsのUbuntu / Windows validationは成功済み。
+- 公開npm packageをclean GitHub Actions runnerから `--version → init → doctor → check` までdogfoodし成功済み。
+- `v0.1.0` Git tagはrelease対象commit `c46c1c6693f735388a4b30b0033f72aed6a8e8b6` を指す。
+- GitHub Release `control-plane v0.1.0` を公開済み。
+- CLI MVP Release Readinessは完了し、Planは `docs/plans/completed/cli-mvp-release-readiness.md` へ移動する。
 
 ## Rules
 
 - ActivityではなくOutcome / Deliverableを中心に書く。
 - Gateを置く場合は「誰が何を判断するか」を明確にする。
 - 期限変更時は、Cost / Riskへの影響も必要に応じて `estimate.md` / `risks.md` へ反映する。
-- Release Readiness中は `bootstrap / status / update` へScopeを広げない。
+- 次PhaseではRelease ReadinessのScopeを再利用せず、新しいGoal / Gateを定義する。
