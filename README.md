@@ -11,14 +11,11 @@ Architecture Gateで以下を承認済みです。
 - 生成先Templateの正本を `template/` に分離する
 - 初期CLIを TypeScript / Node.js で実装する
 
-実装済み:
+初期CLI MVPとして次を実装済みです。
 
 - `control-plane init <directory>`
 - `control-plane doctor [directory]`
-
-次のMVP command:
-
-- `control-plane check`
+- `control-plane check [directory]`
 
 `bootstrap` / `status` / `update` は初期CLI MVPのOut of Scopeです。
 
@@ -54,7 +51,7 @@ node packages/cli/dist/index.js init ../my-project
 node packages/cli/dist/index.js doctor ../my-project
 ```
 
-Fresh Templateでは、Product / Requirements / Constraints / Deliveryが未記入なので通常は次の状態になります。
+Fresh Templateでは通常、次の状態になります。
 
 ```text
 Status: Bootstrap In Progress
@@ -62,7 +59,17 @@ Status: Bootstrap In Progress
 
 `doctor` はRepositoryを変更せず、主要asset、Bootstrap placeholder、Proposed ADR、Current Architecture、Project READMEを読み、次Actionを提示します。
 
-### 5. 生成ProjectのValidation
+### 5. 生成ProjectをValidation
+
+CLIから実行する場合:
+
+```bash
+node packages/cli/dist/index.js check ../my-project
+```
+
+CLIはValidation logicを持たず、対象Projectの既存 `scripts/check.*` を実行します。
+
+直接実行しても同じcontractです。
 
 Linux / macOS / WSL:
 
@@ -78,7 +85,7 @@ cd ..\my-project
 .\scripts\check.ps1
 ```
 
-`doctor` は診断、`scripts/check.*` はValidationです。`doctor` がValidation成功を推測して `Bootstrap Complete` と断定することはありません。
+`doctor` は診断、`check` / `scripts/check.*` はValidationです。
 
 ## Repository Structure
 
@@ -128,13 +135,20 @@ Repositoryを読み、人間向けに状態と次Actionを診断します。
 - `Bootstrap In Progress`: Product / Delivery等のplaceholderが残っている
 - `Architecture Gate Pending`: Bootstrap文書が整い、Proposed ADRと未確定Architectureがある
 - `Needs Review`: ADR / Architectureの状態が機械的に安全に確定できない
-- `Ready for Validation`: 文書上のBootstrap準備は整っており、`scripts/check.*` 実行が次Action
+- `Ready for Validation`: 文書上のBootstrap準備は整っており、Validationが次Action
 
 `doctor` はWorkflowやRequirementsの新しいSource of Truthではありません。
 
-### Planned
+### `control-plane check [directory]`
 
-- `control-plane check`: Projectの既存 `scripts/check.*` を実行
+対象Projectの既存Validation Entry Pointを実行します。
+
+- Windowsでは `scripts/check.ps1` を優先
+- その他のPlatformでは `scripts/check.sh` を優先
+- preferred scriptがない場合、利用可能なもう一方へfallback
+- stdout / stderrをそのまま表示
+- Validation scriptのexit codeをCLIへ伝播
+- Validation logicそのものはCLIへ複製しない
 
 ## Development
 

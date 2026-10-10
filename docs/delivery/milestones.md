@@ -15,9 +15,9 @@
 
 ## Current Progress
 
-- `control-plane doctor [directory]` は実装済みで、PR validation待ち。
-- `control-plane check` はまだ未実装。
-- M5は両commandが検証完了するまで `In Progress` のままとする。
+- `control-plane doctor [directory]` は実装・validation完了しmainへmerge済み。
+- `control-plane check [directory]` は実装済みで、PR validation待ち。
+- M5は `check` のvalidation完了まで `In Progress` とする。
 
 ## Rules
 
