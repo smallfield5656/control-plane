@@ -14,17 +14,13 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            shell: bash
           - os: windows-latest
-            shell: pwsh
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-          cache-dependency-path: packages/cli/package-lock.json
       - name: Install CLI dependencies
         run: npm --prefix packages/cli install
       - name: Validate (Unix)
