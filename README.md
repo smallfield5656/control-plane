@@ -25,7 +25,7 @@ Implementation
 1. `examples/file-organizer/overview.md`
 2. `examples/file-organizer/requirements.md`
 3. `examples/file-organizer/constraints.md`
-4. `examples/file-organizer/adr/0001-use-tauri.md`
+4. `examples/file-organizer/adr-0001-use-tauri.md`
 5. `examples/file-organizer/ARCHITECTURE.md`
 
 このExampleは、同じ事実を複数ファイルへ重複させず、それぞれの正本をつなげる考え方を示しています。
@@ -42,7 +42,8 @@ Implementation
 <ここに概要を書く>
 
 まだ技術スタックは決めていません。
-不足している情報だけを質問し、Requirements / Constraints / Delivery / Architecture / ADR を整理した後で Scaffold してください。
+不足している情報だけを質問し、Requirements / Constraints / Delivery / Architecture / ADR を整理してください。
+人間承認が必要なArchitecture decisionがある場合はArchitecture Gateで停止し、承認前にScaffoldや実装へ進まないでください。
 ```
 
 Bootstrap の基本フロー:
@@ -56,11 +57,13 @@ Requirements / Constraints
   ↓
 Delivery framing（Scope / Estimate / Risks / Milestones）
   ↓
-Architecture / Technology decision
+Architecture / Technology proposal
   ↓
-Spike（不確実性が高い場合のみ）
+Bootstrap Preparation Complete
   ↓
-Decision / ADR
+Architecture Gate（必要な場合）
+  ↓
+Bootstrap Complete
   ↓
 Scaffold
 ```
@@ -74,15 +77,17 @@ Request / Issue
   ↓
 AI Triage / Impact Analysis
   ↓
-必要なら SSOT Update
+必要なら SSOT Update / Decision Gate
   ↓
 TDD / Implementation
   ↓
 scripts/check.*
   ↓
-Pull Request
+Pull Request / Review
   ↓
-Review / Merge
+CI（導入している場合も scripts/check.* を利用）
+  ↓
+Merge
 ```
 
 GitHub Issueを使う場合、Issue自体はSSOTではありません。Issueやコメント内で合意された永続的な情報は、Requirements / Constraints / Delivery / ADR / ARCHITECTURE.md など、Repository上の正本へ反映します。
@@ -96,10 +101,12 @@ Bootstrapは、最低限次の状態になれば完了です。
 - Product Goal が明確になっている。
 - Requirements と Constraints が記録されている。
 - Scope、Estimate、主要Risks、Milestones がプロジェクト規模に応じて見える状態になっている。
-- 重要な技術判断が ADR に記録されている。
+- 重要な技術判断が ADR に記録され、必要な承認を通過している。
 - 現在の技術構成が `ARCHITECTURE.md` に反映されている。
 - 不確実性の高い事項について、必要なら Spike の結果が残っている。
 - `scripts/check.*` が成功する。
+
+Architecture Gate待ちの状態は `Bootstrap Preparation Complete` であり、Bootstrap完了ではありません。
 
 すべての項目を形式的に増やすことが目的ではありません。小規模プロジェクトでは必要な粒度まで簡略化し、複雑さは必要性が実証されてから導入します。
 
@@ -111,8 +118,8 @@ Bootstrapは、最低限次の状態になれば完了です。
 - Product Goal / Requirements / Constraints: `docs/product/`
 - Scope / Estimate / Risks / Milestones: `docs/delivery/`
 - Architecture decisions: `docs/architecture/adr/`
-- Testing policy: `docs/testing/strategy.md`
-- Development workflow: `docs/operations/development.md`
+- Testing policy / Test placement: `docs/testing/strategy.md`
+- Development / Review / Security / CI: `docs/operations/development.md`
 - Bootstrap workflow: `agent/workflows/bootstrap.md`
 - Issue workflow: `agent/workflows/issue.md`
 - Bootstrap Skill: `agent/skills/project-bootstrap/SKILL.md`
@@ -147,6 +154,8 @@ Bootstrapは、最低限次の状態になれば完了です。
 - 不確実性が高い技術判断は小さなSpikeで検証する。
 - Bug fixではRegression testを先に追加する。
 - 見積もりは単一値ではなくRange / Assumptions / Confidenceを示す。
+- ReviewではRequirement / Design / Complexity / Tests / Security / Operationsを優先して確認する。
+- CIでもLocalと同じ `scripts/check.*` を最終検証入口として使う。
 
 ### Optional
 
