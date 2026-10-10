@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
@@ -15,12 +15,15 @@ function exec(file, args, options = {}) {
 
 test("packed package installs and initializes a project with the bundled template", async () => {
   const work = await mkdtemp(path.join(tmpdir(), "control-plane-package-"));
+  let tarball;
   try {
-    const packJson = JSON.parse(exec(npm, ["pack", "--json"], { cwd: packageDir }));
-    const tarball = path.join(packageDir, packJson[0].filename);
-    const consumer = path.join(work, "consumer");
-    await import("node:fs/promises").then(({ mkdir }) => mkdir(consumer, { recursive: true }));
+    const packOutput = exec(npm, ["pack", "--silent"], { cwd: packageDir });
+    const filename = packOutput.trim().split(/\r?\n/).at(-1);
+    assert.ok(filename?.endsWith(".tgz"), `unexpected npm pack output: ${packOutput}`);
+    tarball = path.join(packageDir, filename);
 
+    const consumer = path.join(work, "consumer");
+    await mkdir(consumer, { recursive: true });
     exec(npm, ["init", "-y"], { cwd: consumer });
     exec(npm, ["install", "--ignore-scripts", "--no-audit", "--no-fund", tarball], { cwd: consumer });
 
@@ -35,8 +38,10 @@ test("packed package installs and initializes a project with the bundled templat
     await readFile(path.join(target, "scripts", process.platform === "win32" ? "check.ps1" : "check.sh"), "utf8");
 
     assert.equal(exec(bin, ["--version"], { cwd: consumer }).trim(), "0.1.0");
-    await rm(tarball, { force: true });
   } finally {
+    if (tarball) {
+      await rm(tarball, { force: true });
+    }
     await rm(work, { recursive: true, force: true });
   }
 });
