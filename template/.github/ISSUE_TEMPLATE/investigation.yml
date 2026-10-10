@@ -1,0 +1,30 @@
+name: Investigation
+description: 実装前に調査・Spikeが必要な事項
+title: "[Investigation] "
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: 何を明らかにしたいか
+    validations:
+      required: true
+  - type: textarea
+    id: decision
+    attributes:
+      label: Decision this informs
+      description: この調査結果を何の判断に使うか
+    validations:
+      required: true
+  - type: textarea
+    id: success
+    attributes:
+      label: Success Criteria
+      description: 何が分かれば調査完了か
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: 既知の情報、関連Issue、制約など
