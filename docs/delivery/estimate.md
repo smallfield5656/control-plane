@@ -22,13 +22,15 @@ Medium
 - `control-plane.yml`、Project Profile、Plugin system、SubagentsはRelease Readinessに含めない。
 - npm packageとして配布し、Repository cloneなしでGolden Pathを開始できる状態を目標とする。
 
-## Completed MVP Effort Baseline
+## Delivery Effort
+
+### Completed MVP Effort Baseline
 
 初期見積もりは 5.5–12.5 person-days だった。
 
 Product / Architecture、Repository migration、`init / doctor / check`、基本testまでは完了している。ここでは過去実績を再計算せず、残作業だけを再見積もりする。
 
-## Remaining Release Readiness Effort
+### Remaining Release Readiness Effort
 
 | Area | Range | Unit | Notes |
 |---|---:|---|---|
@@ -40,7 +42,7 @@ Product / Architecture、Repository migration、`init / doctor / check`、基本
 | README / dogfood | 0.5–1.0 | person-days | third-party Quick Start、clean environment確認 |
 | Release / publish | 0.25–0.75 | person-days | version、release notes、npm/GitHub Release |
 
-## Remaining Total Estimate
+### Remaining Total Estimate
 
 - Effort: **3.25–7.0 person-days**
 - Initial Cost: Not calculated
