@@ -12,7 +12,7 @@
 - アーキテクチャ原則: `docs/architecture/principles.md`
 - 設計判断の理由: `docs/architecture/adr/`
 - テスト方針: `docs/testing/strategy.md`
-- 開発手順: `docs/operations/development.md`
+- 開発・Review・Security Gate・CI方針: `docs/operations/development.md`
 - Bootstrap: `agent/workflows/bootstrap.md`
 - Issue intake: `agent/workflows/issue.md`
 
@@ -34,7 +34,7 @@ IssueはWork Intakeであり、永続的なSource of Truthではない。Issue�
 
 1. 関連する Requirement と Acceptance Criteria を確認する。
 2. 必要なコード・テスト・Architecture・ADR・Delivery情報を読む。
-3. Cost / Risk / Timelineへの影響が大きい場合は、実装前にDecision Gateを設ける。
+3. Cost / Risk / Timeline / Securityへの影響が大きい場合は、実装前にDecision Gateを設ける。
 4. 期待する振る舞いをテストで定義する。
 5. **RED**: 期待した理由で失敗することを確認する。
 6. **GREEN**: 最小限の実装で通す。
@@ -42,6 +42,8 @@ IssueはWork Intakeであり、永続的なSource of Truthではない。Issue�
 8. 関連テストを実行する。
 9. `scripts/check.*` で全体検証する。
 10. 正本が変わった場合だけ durable documentation を更新する。
+
+Test placement、Review、Security trigger、CIの詳細は対応するSSOTを参照し、このファイルへ重複させない。
 
 ## Bug Fix
 
@@ -57,5 +59,5 @@ IssueはWork Intakeであり、永続的なSource of Truthではない。Issue�
 - 関連テストが通る。
 - 全体検証が通る。
 - 必要な正本だけが更新されている。
-- Cost / Risk / Timelineへの影響が必要に応じて反映されている。
+- Cost / Risk / Timeline / Securityへの影響が必要に応じて反映されている。
 - 一時的な作業メモやIssueコメントが仕様化していない。
