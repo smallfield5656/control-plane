@@ -18,7 +18,7 @@
 
 ### Unit
 
-純粋なロジック、validation、business rule を高速に検証する。実装コードの近くに配置してよい。
+純粋なロジック、validation、business rule を高速に検証する。
 
 ### Integration
 
@@ -31,6 +31,18 @@ API、schema、外部interfaceの互換性を検証する。
 ### E2E
 
 重要なユーザーフローに限定する。
+
+## Test Placement
+
+テスト配置は、テストの責務と保守性を優先して決める。
+
+- Unit / Component / module-local な Integration test は、原則として対象コードの近くに colocate する。
+- Repository全体を横断する Integration / E2E test は、原則として `tests/` 配下へ置く。
+- E2E test の標準配置は `tests/e2e/` とする。
+- Framework / ecosystem に強い慣習があり、それに従う方が保守しやすい場合は例外を認める。
+- Directory配置そのものを目的化しない。合理的な例外を `scripts/check.*` で機械的に禁止しない。
+
+Scaffold時は、このStrategyと採用Technologyの慣習を確認してTest placementを決める。
 
 ## Regression Tests
 
