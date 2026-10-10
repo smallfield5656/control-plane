@@ -31,10 +31,19 @@ $requiredFiles = @(
     "docs/product/overview.md",
     "docs/product/requirements.md",
     "docs/product/constraints.md",
+    "docs/delivery/charter.md",
+    "docs/delivery/estimate.md",
+    "docs/delivery/risks.md",
+    "docs/delivery/milestones.md",
     "docs/testing/strategy.md",
     "docs/operations/development.md",
     "agent/workflows/bootstrap.md",
+    "agent/workflows/issue.md",
     "agent/skills/project-bootstrap/SKILL.md",
+    ".github/ISSUE_TEMPLATE/feature.yml",
+    ".github/ISSUE_TEMPLATE/bug.yml",
+    ".github/ISSUE_TEMPLATE/investigation.yml",
+    ".github/pull_request_template.md",
     "examples/file-organizer/README.md",
     "examples/file-organizer/overview.md",
     "examples/file-organizer/requirements.md",
@@ -55,7 +64,18 @@ foreach ($heading in @("## Problem", "## Users", "## Goals", "## Non-Goals", "##
     Require-Heading "docs/product/overview.md" $heading
 }
 
+foreach ($heading in @("## Problem", "## Expected Outcome", "## Scope", "## Stakeholders", "## Budget Guardrail", "## Decision Gates")) {
+    Require-Heading "docs/delivery/charter.md" $heading
+}
+
+foreach ($heading in @("## Confidence", "## Assumptions", "## Initial Cost", "## Running Cost", "## Total Estimate")) {
+    Require-Heading "docs/delivery/estimate.md" $heading
+}
+
+Require-Heading "docs/delivery/risks.md" "## Risk Register"
+Require-Heading "docs/delivery/milestones.md" "## Milestone Plan"
 Require-Heading "agent/workflows/bootstrap.md" "## Bootstrap Completion Gate"
+Require-Heading "agent/workflows/issue.md" "## 4. Impact Analysis"
 Require-Heading "agent/skills/project-bootstrap/SKILL.md" "## Bootstrap完了条件"
 Require-Heading "examples/file-organizer/adr-0001-use-tauri.md" "## Context"
 Require-Heading "examples/file-organizer/adr-0001-use-tauri.md" "## Decision"
