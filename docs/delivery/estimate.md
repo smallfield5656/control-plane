@@ -42,15 +42,13 @@ Product / Architecture、Repository migration、`init / doctor / check`、基本
 | README / dogfood | 0.5–1.0 | person-days | third-party Quick Start、clean environment確認 |
 | Release / publish | 0.25–0.75 | person-days | version、release notes、npm/GitHub Release |
 
-### Remaining Total Estimate
-
-- Effort: **3.25–7.0 person-days**
-- Initial Cost: Not calculated
-- Monthly Cost: 0 external infrastructure expected
-
 ## Rate
 
 Not specified
+
+## Initial Cost
+
+Not calculated
 
 ## Running Cost
 
@@ -60,6 +58,12 @@ Not specified
 | External services | 0 expected | MVPではrequired external APIなし |
 | npm registry | 0 expected for public package | Account / scope policyによる |
 | Operations | Not calculated | Maintainer effortのみ |
+
+## Total Estimate
+
+- Remaining effort: **3.25–7.0 person-days**
+- Initial Cost: Not calculated
+- Monthly Cost: 0 external infrastructure expected
 
 ## Main Uncertainty
 
