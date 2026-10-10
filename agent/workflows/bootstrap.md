@@ -77,23 +77,43 @@ Spike には仮説、成功条件、測定値、結論を残す。
 
 Budget / Risk / Timelineへの重大な影響がある場合も、必要なDecision Gateを通す。
 
+人間承認が必要なADRを提示できる状態まで整理できたら、そこで **Bootstrap Preparation Complete / Architecture Gate Pending** と報告し、Scaffoldや実装を開始せず承認を待つ。
+
 ## 10. Current Architecture
 
 承認された現在状態を `ARCHITECTURE.md` に反映する。
 
 ## 11. Scaffold
 
-ここまで決まってからプロジェクトを生成する。
+Architecture Gateが必要な場合は承認後にプロジェクトを生成する。
+
+Scaffold時は `docs/testing/strategy.md` を参照し、採用Technologyの慣習と合わせてTest placementを決める。Repository横断のE2Eを無理由にroot直下へ増やさず、原則 `tests/e2e/` を使う。
 
 `scripts/check.*` はControl Plane共通の検証入口とする。採用技術固有の test / lint / typecheck / build 等は、必要なPlatformに応じて `scripts/check-project.sh` または `scripts/check-project.ps1` に置き、共通checkから呼び出す。
 
 両Platform用hookを形式的に揃える必要はない。実際に利用・検証するPlatformだけを用意する。
+
+CIを導入する場合、runtime / dependency setupは採用Technologyに合わせてProject固有に構成するが、最終的な検証入口はLocalと同じ `scripts/check.*` を使う。CI内へtest / lint / buildの知識を重複させない。
 
 ## 12. Project README
 
 Bootstrap後は、ルート `README.md` をテンプレート説明ではなく、そのプロジェクト固有の入口へ置き換える。
 
 最低限、Purpose、Setup / Run、Validation、主要Documentationへの導線を示す。Control Plane固有の詳細は `AGENTS.md` と関連Workflowを正本として参照し、READMEへ重複させない。
+
+## Bootstrap Preparation Gate
+
+Architecture Gate待ちとして停止する前に次を確認する。
+
+- Product Goalが定義されている
+- 主要Requirements / Acceptance Criteriaが定義されている
+- ConstraintsがTechnology Decisionと分離されている
+- Scope / Effort Estimate /主要Risks / Milestonesが必要な粒度で整理されている
+- 主要なArchitecture / Technology候補と推奨理由を説明できる
+- 人間承認が必要な判断がADR `Proposed` として記録されている
+- 未承認Technologyを `ARCHITECTURE.md` の現在状態として既成事実化していない
+
+この状態は **Bootstrap Preparation Complete** であり、Bootstrap完了ではない。
 
 ## Bootstrap Completion Gate
 
