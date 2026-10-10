@@ -43,8 +43,22 @@ description: 新しいプロジェクトで、要求・制約・品質特性か�
 - PoC最適とProduction最適を混同しない。
 - 見積もりはEffort range + Confidenceを先に示し、単価不明なら金額を推測しない。
 - 最終的な現在状態は `ARCHITECTURE.md` に反映する。
+- Scaffold時は `docs/testing/strategy.md` に従い、採用Technologyの慣習と合わせてTest placementを決める。
 - Bootstrap後はルートREADMEをそのProject固有の入口へ置き換える。
+- Architecture Gate待ちをBootstrap完了と呼ばない。
 - Bootstrap完了条件を満たす前に「完了」としない。
+
+## Bootstrap Preparation Complete
+
+人間承認が必要なArchitecture decisionがある場合、次を満たした時点で実装を止めてArchitecture Gateを待つ。
+
+- Product Goal、主要Requirements、Acceptance Criteria、Constraintsが整理されている。
+- Scope / Effort Estimate / Risks / Milestonesが必要な粒度で整理されている。
+- Architecture / Technology候補と推奨理由を説明できる。
+- 人間が判断すべき事項が明確になっている。
+- 長期的影響のある提案がADR `Proposed` として記録されている。
+
+この状態はBootstrap完了ではない。承認前にScaffoldや実装へ進まない。
 
 ## Bootstrap完了条件
 
