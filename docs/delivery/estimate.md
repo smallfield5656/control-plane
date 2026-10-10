@@ -6,58 +6,64 @@
 
 ## Estimate Date
 
-TODO: YYYY-MM-DD
+2026-10-10
 
 ## Confidence
 
-TODO: Low / Medium / High
+Low-Medium
 
 ## Assumptions
 
-- TODO: Team size、対象Platform、既存資産、外部Service利用量、既知の制約など
+- Maintainer 1名を基準とする。
+- 初期CLI Scopeは `init / doctor / check` に限定する。
+- Repository restructuringとCLI technologyはArchitecture Gateで承認後に実装する。
+- `control-plane.yml`、Project Profile、Plugin system、Subagentsは初期Scopeに含めない。
+- Existing Template / Workflow / Validation assetsを再利用する。
 
 ## Delivery Effort
 
 | Area | Range | Unit | Notes |
 |---|---:|---|---|
-| Engineering | TODO | person-hours / person-days | |
-| QA / Verification | TODO | person-hours / person-days | |
-| PM / Coordination | TODO | person-hours / person-days | |
-| Security / Review | TODO | person-hours / person-days | |
+| Product / Architecture | 1–2 | person-days | Requirements、ADR、Migration design |
+| Repository migration | 1–2.5 | person-days | Template分離、既存check更新、migration verification |
+| CLI implementation | 2–4 | person-days | init / doctor / check |
+| QA / Verification | 1–2.5 | person-days | Unit / Integration / golden path / cross-platform |
+| Documentation / Release | 0.5–1.5 | person-days | README、usage、release readiness |
 
 ## Rate
 
-TODO: 単価が分かる場合のみ記載。不明なら `Not specified` とする。
+Not specified
 
 ## Initial Cost
 
-TODO: Rateが分かる場合のみ算出。不明なら `Not calculated` とする。
+Not calculated
 
 ## Running Cost
 
 | Item | Monthly Range | Notes |
 |---|---:|---|
-| Infrastructure | TODO | |
-| External services | TODO | |
-| Operations | TODO | |
+| Infrastructure | 0 expected | Initial CLI does not require hosted infrastructure |
+| External services | 0 expected | No required external API in MVP |
+| Operations | Not calculated | Maintainer effort only |
 
 ## Contingency
 
-TODO: 必要な場合のみ設定。不確実性が高い場合は理由も記載する。
+Repository migrationとcross-platform distributionの不確実性があるため、Rangeで吸収する。CLI technology選定後に再見積もりする。
 
 ## Total Estimate
 
-- Effort: TODO
-- Initial Cost: TODO
-- Monthly Cost: TODO
+- Effort: 5.5–12.5 person-days
+- Initial Cost: Not calculated
+- Monthly Cost: 0 external infrastructure expected
 
 ## Scenario
 
-必要に応じて Lean / Expected / High など複数Scenarioを示す。
+- Lean: Repository再編を小さく保ち、runtime-based CLIで開始する。
+- Expected: init / doctor / check + migration tests + Windows/Linux validation。
+- High: Distribution方式やcross-platform behaviorで追加検証が必要になる。
 
 ## Change Log
 
-見積もりが大きく変わった場合、数値だけでなく前提・Scope・Riskのどれが変わったかを残す。
-
 | Date | Previous | Current | Reason |
 |---|---:|---:|---|
+| 2026-10-10 | Not estimated | 5.5–12.5 person-days | CLI MVPの初期Scopeを定義 |
