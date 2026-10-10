@@ -1,0 +1,33 @@
+name: Feature
+description: 新しい振る舞い・価値・改善を提案する
+title: "[Feature] "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: 何に困っているか、何を改善したいか
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Expected Outcome
+      description: どうなれば問題が解決したと言えるか
+    validations:
+      required: true
+  - type: textarea
+    id: users
+    attributes:
+      label: Users
+      description: 誰が影響を受けるか
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Known Constraints
+      description: 分かっている制約があれば記載
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Screenshot、ログ、関連Issueなど

@@ -1,0 +1,44 @@
+name: Bug
+description: 再現可能な不具合を報告する
+title: "[Bug] "
+body:
+  - type: textarea
+    id: current
+    attributes:
+      label: Current Behavior
+      description: 現在何が起きているか
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: 本来どうなるべきか
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: 再現手順
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS、Version、Browserなど
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: ログ、Screenshot、Error messageなど
+  - type: dropdown
+    id: regression
+    attributes:
+      label: Regression
+      description: 以前は正常に動作していましたか
+      options:
+        - "Yes"
+        - "No"
+        - "Unknown"

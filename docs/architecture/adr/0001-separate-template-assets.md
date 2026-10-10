@@ -1,67 +1,49 @@
 # ADR-0001: Separate generated project template assets from the control-plane product repository
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-10-10
 - Supersedes: —
 
 ## Context
 
-現在のRepository rootには、生成先Projectで使う `AGENTS.md`、`ARCHITECTURE.md`、`docs/`、`agent/`、`scripts/`、`.github/` と、control-plane自身のProduct repositoryとして今後必要になるCLIやProduct documentationが同居している。
-
-CLIが `init` でTemplateを展開するには、生成対象assetとcontrol-plane自身のassetの境界が明確である必要がある。
+Repository rootにはcontrol-plane自身のProduct資産と、生成先Project向け資産が同居していた。CLI `init` が安全にTemplateを展開するには、生成Sourceを明確にする必要がある。
 
 ## Decision
 
-生成先Project用assetを `template/` 配下へ分離し、Repository rootをcontrol-plane自身のProduct repositoryとして扱う案を採用候補とする。
+生成先Project用assetの正本を `template/` 配下へ分離する。
 
-想定構成:
+Repository rootはcontrol-plane自身のProduct repositoryとして扱う。rootに残る同名のWorkflow / Documentation / GitHub設定はcontrol-plane自身の運用資産であり、`control-plane init` の生成Sourceにはしない。
 
-```text
-control-plane/
-├── README.md
-├── AGENTS.md
-├── packages/
-│   └── cli/
-├── template/
-│   ├── AGENTS.md
-│   ├── ARCHITECTURE.md
-│   ├── docs/
-│   ├── agent/
-│   ├── scripts/
-│   └── .github/
-├── docs/
-└── ...
-```
+`control-plane init` は `template/` のみを読み、Template本文をCLIへhard-codeしない。
 
-Architecture Gate承認前には移動を行わない。
+Migration初期は既存利用者への破壊的変更を避けるため、root資産を一括削除せず責務を切り替える。将来、重複が保守上の問題になった場合に別Decisionとして整理する。
 
 ## Consequences
 
 ### Positive
 
-- CLIの生成対象が明確になる。
-- control-plane自身のProduct docsと生成先ProjectのTemplate docsを分離できる。
-- CLIとTemplateを同一Repositoryで同期して変更できる。
-- 将来の `control-plane update` やTemplate versioningの基盤にできる。
+- CLIの生成対象が一意になる。
+- control-plane自身のProduct docsと生成Templateを分離できる。
+- CLIとTemplateを同一Repositoryで同期できる。
+- 将来のupdate/versioningの基盤になる。
 
 ### Negative / Trade-offs
 
-- 既存README、scripts/check.*、Example、Workflowのpath参照を移行する必要がある。
-- 現在の「cloneしてそのままProject化する」利用方法にmigrationが必要になる。
-- Migration時にTemplate assetの欠落・参照切れRiskがある。
+- 一部の汎用Workflowはrootとtemplateに同形の資産を持つため、変更時に同期確認が必要になる。
+- 旧来の「Repository rootをそのままTemplateとしてcloneする」使い方からCLI中心の導線へ移行する必要がある。
 
 ## Alternatives Considered
 
-### RootをTemplateのまま維持しCLIだけ追加
+### RootをTemplateのまま維持
 
-- 利点: Migrationが小さい。
-- 欠点: Product repositoryと生成Templateの責務が曖昧なまま残る。
+Migrationは小さいが、Product repositoryとTemplateの境界が曖昧なままになるため不採用。
 
 ### CLIを別Repositoryへ分離
 
-- 利点: Release cycleを分離しやすい。
-- 欠点: 現段階ではTemplate / Workflow / CLIの仕様同期コストとversion driftが大きい。
+現段階ではversion driftと同期コストが大きいため不採用。
 
 ## Validation
 
-承認後のMigrationでは、移動前後のTemplate inventoryを比較し、生成したfixture projectに対してControl Plane validationが成功することを確認する。
+- `template/` に生成に必要なSSOT / Workflow / Validation / Exampleが存在すること。
+- CLIのintegration testで生成Projectの主要contractを確認すること。
+- `template/scripts/check.*` がTemplate rootで成功すること。
