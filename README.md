@@ -1,181 +1,107 @@
 # control-plane
 
-`control-plane` は、人間が意図・制約・品質基準を定義し、AIエージェントがその境界内で安全に実装・検証・レビューするための開発テンプレートです。
+`control-plane` は、人間が意図・制約・品質基準を定義し、AIエージェントがその境界内で安全に実装・検証・レビューするためのEngineering Control Planeです。
+
+Repository contractと生成TemplateをDurable Truthとし、CLIはそれらを操作する薄いInterfaceとして実装します。
 
 ## Current Phase
 
-現在はTemplate / Workflow hardeningを終え、CLI化の **Bootstrap Preparation / Architecture Gate Pending** に入っています。
+Architecture Gateで以下を承認しました。
 
-初期CLIの対象は次の3コマンドです。
+- 生成先Templateの正本を `template/` に分離する
+- 初期CLIを TypeScript / Node.js で実装する
 
-- `control-plane init`
-- `control-plane doctor`
-- `control-plane check`
-
-ただしCLIはまだ未実装です。Repository / Template structure と CLI implementation technology は `Proposed` ADRとして検討中で、Architecture Gate承認前にScaffoldやRepository移動は行いません。
-
-- Repository structure proposal: `docs/architecture/adr/0001-separate-template-assets.md`
-- CLI technology decision: `docs/architecture/adr/0002-cli-implementation-technology.md`
-
-`control-plane.yml`、Project Profile、Plugin system、Subagentsは初期CLI MVPの必須要素にせず、必要性が実証されてから検討します。
-
-## Quick Tour
-
-まずは `examples/file-organizer/` を順番に見ると、Control Plane の基本フローを短時間で把握できます。
+最初のVertical Sliceとして次を実装中です。
 
 ```text
-Idea
-  ↓
-Product Goal
-  ↓
-Requirements / Constraints
-  ↓
-Delivery（Scope / Estimate / Risks / Milestones）
-  ↓
-Architecture / ADR
-  ↓
-Implementation
+control-plane init <directory>
 ```
 
-確認する順番:
+`doctor` / `check` / `bootstrap` / `status` / `update` はまだ未実装です。
 
-1. `examples/file-organizer/overview.md`
-2. `examples/file-organizer/requirements.md`
-3. `examples/file-organizer/constraints.md`
-4. `examples/file-organizer/adr-0001-use-tauri.md`
-5. `examples/file-organizer/ARCHITECTURE.md`
-
-このExampleは、同じ事実を複数ファイルへ重複させず、それぞれの正本をつなげる考え方を示しています。
-
-## Start Your Project
-
-新しいプロジェクトでは、最初に技術スタックを決めません。まず AI agent に次のように依頼してください。
+## Repository Structure
 
 ```text
-このリポジトリの AGENTS.md と agent/workflows/bootstrap.md に従って、
-このプロジェクトの Bootstrap を開始してください。
-
-作りたいもの:
-<ここに概要を書く>
-
-まだ技術スタックは決めていません。
-不足している情報だけを質問し、Requirements / Constraints / Delivery / Architecture / ADR を整理してください。
-人間承認が必要なArchitecture decisionがある場合はArchitecture Gateで停止し、承認前にScaffoldや実装へ進まないでください。
+control-plane/
+├── README.md
+├── AGENTS.md
+├── ARCHITECTURE.md
+├── docs/                 # control-plane自身のSSOT
+├── agent/                # control-plane自身のWorkflow / Skill
+├── scripts/              # product validation
+├── packages/
+│   └── cli/              # TypeScript / Node.js CLI
+├── template/             # 生成先Project assetの正本
+└── examples/
 ```
 
-Bootstrap の基本フロー:
+重要な境界:
 
 ```text
-Product idea
-  ↓
-Bootstrap discovery
-  ↓
-Requirements / Constraints
-  ↓
-Delivery framing（Scope / Estimate / Risks / Milestones）
-  ↓
-Architecture / Technology proposal
-  ↓
-Bootstrap Preparation Complete
-  ↓
-Architecture Gate（必要な場合）
-  ↓
-Bootstrap Complete
-  ↓
-Scaffold
+Template / Workflow / Validation contract
+                = Durable Truth
+
+CLI             = 操作Interface
 ```
 
-## Development Flow
+CLIへTemplate本文やWorkflow logicを重複してhard-codeしません。
 
-Bootstrap 完了後は、変更内容に応じて直接AIへ依頼するか、GitHub IssueなどをWork Intakeとして利用します。Issueの利用は必須ではありません。
+## Initial CLI Contract
 
-```text
-Request / Issue
-  ↓
-AI Triage / Impact Analysis
-  ↓
-必要なら SSOT Update / Decision Gate
-  ↓
-TDD / Implementation
-  ↓
-scripts/check.*
-  ↓
-Pull Request / Review
-  ↓
-CI（導入している場合も scripts/check.* を利用）
-  ↓
-Merge
-```
+### `control-plane init <directory>`
 
-GitHub Issueを使う場合、Issue自体はSSOTではありません。Issueやコメント内で合意された永続的な情報は、Requirements / Constraints / Delivery / ADR / ARCHITECTURE.md など、Repository上の正本へ反映します。
+`template/` を新しいDirectoryへ展開します。
 
-詳細は `agent/workflows/issue.md` を参照してください。
+- Template本文は `template/` から読む
+- 既存Directoryを上書きしない
+- partial copyを残しにくいstaging方式を使う
+- 生成Projectは自身の `scripts/check.*` を持つ
 
-## Completion Criteria
+### Planned
 
-Bootstrapは、最低限次の状態になれば完了です。
+- `control-plane doctor`: Repository状態と次Actionを診断
+- `control-plane check`: Projectの既存 `scripts/check.*` を実行
 
-- Product Goal が明確になっている。
-- Requirements と Constraints が記録されている。
-- Scope、Estimate、主要Risks、Milestones がプロジェクト規模に応じて見える状態になっている。
-- 重要な技術判断が ADR に記録され、必要な承認を通過している。
-- 現在の技術構成が `ARCHITECTURE.md` に反映されている。
-- 不確実性の高い事項について、必要なら Spike の結果が残っている。
-- `scripts/check.*` が成功する。
+## Development
 
-Architecture Gate待ちの状態は `Bootstrap Preparation Complete` であり、Bootstrap完了ではありません。
+control-plane自身の開発でもControl Plane Workflowをdogfoodします。
 
-すべての項目を形式的に増やすことが目的ではありません。小規模プロジェクトでは必要な粒度まで簡略化し、複雑さは必要性が実証されてから導入します。
+1. `docs/product/` でGoal / Requirements / Constraintsを確認
+2. `docs/delivery/` でScope / Estimate / Risks / Milestonesを確認
+3. 長期的Decisionは `docs/architecture/adr/` へ記録
+4. Behavior changeはTDDを基本とする
+5. `scripts/check.*` を共通Validation Entry Pointとして使う
+6. Review / CIでも同じValidation contractを利用する
 
-## まず見る場所
+## Sources of Truth
 
-人間向けの入口はこの `README.md`、AI agent向けの入口は `AGENTS.md` です。
-
-- 現在のアーキテクチャ: `ARCHITECTURE.md`
-- Product Goal / Requirements / Constraints: `docs/product/`
-- Scope / Estimate / Risks / Milestones: `docs/delivery/`
-- Architecture decisions: `docs/architecture/adr/`
-- Testing policy / Test placement: `docs/testing/strategy.md`
+- Product: `docs/product/`
+- Delivery: `docs/delivery/`
+- Current Architecture: `ARCHITECTURE.md`
+- ADR: `docs/architecture/adr/`
+- Testing: `docs/testing/strategy.md`
 - Development / Review / Security / CI: `docs/operations/development.md`
 - Bootstrap workflow: `agent/workflows/bootstrap.md`
-- Issue workflow: `agent/workflows/issue.md`
-- Bootstrap Skill: `agent/skills/project-bootstrap/SKILL.md`
-- 完成例: `examples/file-organizer/`
-- 統一検証コマンド: `scripts/check.*`
+- Generated project template: `template/`
 
-## 基本思想
+## Principles
 
-- **SSOT**: 同じ事実を複数箇所に重複させない。
-- **Bootstrap first**: 技術ありきではなく、要求・制約・品質特性から技術を選ぶ。
-- **Issue = Work Intake**: Issueは変更要求・Bug・調査依頼の入口であり、永続仕様ではない。
-- **Repository = Durable Truth**: 合意された永続的な情報はRepository上の正本へ昇格する。
-- **TDD**: 振る舞いの変更では `RED → GREEN → REFACTOR` を基本とする。
-- **Executable rules**: 守るべきルールは、可能な限り test / lint / CI / script にする。
-- **Small instructions**: `AGENTS.md` や Skill は巨大化させず、必要な情報へのルーターとして使う。
-- **Vendor neutral**: 特定のAIツール固有設定をSSOTにしない。
-- **Complexity must be earned**: 複雑さは、必要性が実証されてから導入する。
+- **SSOT**: One fact, one authoritative location.
+- **Bootstrap first**: Requirements / Constraints before Technology.
+- **Repository = Durable Truth**: Issueや会話を永続仕様にしない。
+- **Executable rules**: 重要なRuleは可能な限りtest / lint / scriptで検証する。
+- **Vendor neutral**: 特定AI vendorの設定をSSOTにしない。
+- **Complexity must be earned**: 必要性が実証されてから抽象化や仕組みを追加する。
 
-## Required / Recommended / Optional
+## Not Yet Added
 
-### Required
+初期CLI MVPでは以下を前提にしません。
 
-- Product Goal、Requirements、Constraintsを明文化する。
-- Scope、Estimate、主要Risks、Milestonesをプロジェクト規模に応じて明示する。
-- 長期的影響のあるArchitecture decisionはADRに残す。
-- 現在状態を `ARCHITECTURE.md` に反映する。
-- 作業完了前に `scripts/check.*` を通す。
+- `control-plane.yml`
+- Project Profile
+- Plugin system
+- Subagents
+- Agent adapters
+- 独自Harness runtime
 
-### Recommended
-
-- 振る舞いの変更はTDDで進める。
-- 不確実性が高い技術判断は小さなSpikeで検証する。
-- Bug fixではRegression testを先に追加する。
-- 見積もりは単一値ではなくRange / Assumptions / Confidenceを示す。
-- ReviewではRequirement / Design / Complexity / Tests / Security / Operationsを優先して確認する。
-- CIでもLocalと同じ `scripts/check.*` を最終検証入口として使う。
-
-### Optional
-
-- 候補が拮抗するときのDecision Matrix。
-- Subagent、追加Skill、Harness固有機能。
-- プロジェクト規模に対して過剰なプロセスは導入しない。
+必要性が実案件で繰り返し確認されてから追加します。
