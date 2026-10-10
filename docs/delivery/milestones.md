@@ -20,13 +20,14 @@
 ## Current Progress
 
 - `control-plane init / doctor / check` は実装・validation完了しmainへmerge済み。
-- npm package identityは `control-plane@0.1.0`、Node.js support baselineは `>=22` として実装済み。
+- npmのunscoped package名 `control-plane` は既存 `controlplane` に近すぎるためregistryに拒否された。正式なdistribution identityを `@smallfield5656/control-plane@0.1.0` へ変更する。
+- CLI bin名は引き続き `control-plane` とする。
+- Node.js support baselineは `>=22`。
 - root `template/` を唯一のSource of Truthとし、`npm pack` 時だけpackage artifactへstagingする方式を実装済み。
 - packed tarballを一時consumerへinstallし、`init → doctor → check → --version / --help` を実行するGolden Path testを追加済み。
 - GitHub ActionsでUbuntu / Windowsの双方が成功し、packed artifact Golden Pathを含む13 testsが通過済み。
-- READMEは公開後の `npx control-plane init my-app` を先頭Golden Pathとして更新済み。
-- 残るRelease blockerはnpm registryへの実publishと、published packageからの最終dogfood。
-- npm publishにはnpm account authorizationが必要なため、Repository側だけでは完了できない。
+- READMEの公開Golden Pathは `npx @smallfield5656/control-plane init my-app` へ更新する。
+- 残るRelease blockerはscoped packageの実publishと、published packageからの最終dogfood。
 
 ## Rules
 
