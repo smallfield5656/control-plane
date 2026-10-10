@@ -6,18 +6,79 @@ Repository contractと生成TemplateをDurable Truthとし、CLIはそれらを�
 
 ## Current Phase
 
-Architecture Gateで以下を承認しました。
+Architecture Gateで以下を承認済みです。
 
 - 生成先Templateの正本を `template/` に分離する
 - 初期CLIを TypeScript / Node.js で実装する
 
-最初のVertical Sliceとして次を実装中です。
+実装済み:
 
-```text
-control-plane init <directory>
+- `control-plane init <directory>`
+- `control-plane doctor [directory]`
+
+次のMVP command:
+
+- `control-plane check`
+
+`bootstrap` / `status` / `update` は初期CLI MVPのOut of Scopeです。
+
+## Quick Start
+
+### 1. Repositoryを取得
+
+```bash
+git clone <control-plane repository URL>
+cd control-plane
 ```
 
-`doctor` / `check` / `bootstrap` / `status` / `update` はまだ未実装です。
+### 2. CLI dependencyをinstallしてbuild
+
+```bash
+npm --prefix packages/cli install
+npm --prefix packages/cli run build
+```
+
+### 3. 新しいProjectを生成
+
+Repositoryの1つ上に `my-project` を作る例:
+
+```bash
+node packages/cli/dist/index.js init ../my-project
+```
+
+既存Directoryは上書きしません。
+
+### 4. 生成Projectを診断
+
+```bash
+node packages/cli/dist/index.js doctor ../my-project
+```
+
+Fresh Templateでは、Product / Requirements / Constraints / Deliveryが未記入なので通常は次の状態になります。
+
+```text
+Status: Bootstrap In Progress
+```
+
+`doctor` はRepositoryを変更せず、主要asset、Bootstrap placeholder、Proposed ADR、Current Architecture、Project READMEを読み、次Actionを提示します。
+
+### 5. 生成ProjectのValidation
+
+Linux / macOS / WSL:
+
+```bash
+cd ../my-project
+bash scripts/check.sh
+```
+
+Windows PowerShell:
+
+```powershell
+cd ..\my-project
+.\scripts\check.ps1
+```
+
+`doctor` は診断、`scripts/check.*` はValidationです。`doctor` がValidation成功を推測して `Bootstrap Complete` と断定することはありません。
 
 ## Repository Structure
 
@@ -46,7 +107,7 @@ CLI             = 操作Interface
 
 CLIへTemplate本文やWorkflow logicを重複してhard-codeしません。
 
-## Initial CLI Contract
+## CLI Contract
 
 ### `control-plane init <directory>`
 
@@ -57,9 +118,22 @@ CLIへTemplate本文やWorkflow logicを重複してhard-codeしません。
 - partial copyを残しにくいstaging方式を使う
 - 生成Projectは自身の `scripts/check.*` を持つ
 
+### `control-plane doctor [directory]`
+
+Repositoryを読み、人間向けに状態と次Actionを診断します。
+
+主な状態:
+
+- `Setup Incomplete`: 必須assetが欠けている
+- `Bootstrap In Progress`: Product / Delivery等のplaceholderが残っている
+- `Architecture Gate Pending`: Bootstrap文書が整い、Proposed ADRと未確定Architectureがある
+- `Needs Review`: ADR / Architectureの状態が機械的に安全に確定できない
+- `Ready for Validation`: 文書上のBootstrap準備は整っており、`scripts/check.*` 実行が次Action
+
+`doctor` はWorkflowやRequirementsの新しいSource of Truthではありません。
+
 ### Planned
 
-- `control-plane doctor`: Repository状態と次Actionを診断
 - `control-plane check`: Projectの既存 `scripts/check.*` を実行
 
 ## Development
