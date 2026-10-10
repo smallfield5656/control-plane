@@ -8,11 +8,13 @@ export class InitError extends Error {}
 
 export function defaultTemplateDir(): string {
   const here = path.dirname(fileURLToPath(import.meta.url));
-  const packaged = path.resolve(here, "../template");
-  if (existsSync(packaged)) {
-    return packaged;
+  const repositoryTemplate = path.resolve(here, "../../../template");
+  if (existsSync(repositoryTemplate)) {
+    return repositoryTemplate;
   }
-  return path.resolve(here, "../../../template");
+
+  const packagedTemplate = path.resolve(here, "../template");
+  return packagedTemplate;
 }
 
 async function assertTemplate(templateDir: string): Promise<void> {
