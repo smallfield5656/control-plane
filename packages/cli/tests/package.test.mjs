@@ -10,7 +10,12 @@ const packageDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
 
 function exec(file, args, options = {}) {
-  return execFileSync(file, args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], ...options });
+  return execFileSync(file, args, {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+    shell: process.platform === "win32",
+    ...options
+  });
 }
 
 test("packed package installs and runs the CLI golden path with the bundled template", async () => {
