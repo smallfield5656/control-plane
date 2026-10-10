@@ -29,9 +29,17 @@ Closes #
 - [ ] Regression test was added for a bug
 - [ ] `scripts/check.*` passes
 
+## Review focus
+
+<!-- Requirement / Design / Complexity / Tests / Security / Operationsのうち、特に見てほしい点 -->
+
 ## Architecture impact
 
 <!-- Architectureへの影響。なければ None -->
+
+## Security / Data impact
+
+<!-- Security Review Triggerやdata handlingへの影響。なければ None -->
 
 ## Delivery impact
 
