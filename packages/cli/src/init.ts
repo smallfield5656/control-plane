@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { cp, mkdtemp, readdir, rename, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -7,7 +8,13 @@ export class InitError extends Error {}
 
 export function defaultTemplateDir(): string {
   const here = path.dirname(fileURLToPath(import.meta.url));
-  return path.resolve(here, "../../../template");
+  const repositoryTemplate = path.resolve(here, "../../../template");
+  if (existsSync(repositoryTemplate)) {
+    return repositoryTemplate;
+  }
+
+  const packagedTemplate = path.resolve(here, "../template");
+  return packagedTemplate;
 }
 
 async function assertTemplate(templateDir: string): Promise<void> {

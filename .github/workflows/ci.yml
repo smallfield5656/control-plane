@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+          - os: windows-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install CLI dependencies
+        run: npm --prefix packages/cli install
+      - name: Validate (Unix)
+        if: runner.os != 'Windows'
+        run: bash scripts/check.sh
+      - name: Validate (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/check.ps1
