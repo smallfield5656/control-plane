@@ -22,7 +22,8 @@ jobs:
         with:
           node-version: '22'
       - name: Install CLI dependencies
-        run: npm --prefix packages/cli install
+        working-directory: packages/cli
+        run: npm install
       - name: Validate (Unix)
         if: runner.os != 'Windows'
         run: bash scripts/check.sh
