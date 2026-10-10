@@ -4,88 +4,63 @@
 
 Repository contractと生成TemplateをDurable Truthとし、CLIはそれらを操作する薄いInterfaceとして実装します。
 
+## Public Quick Start
+
+npm公開後のGolden Pathはこれだけです。
+
+```bash
+npx control-plane init my-app
+cd my-app
+npx control-plane doctor .
+npx control-plane check .
+```
+
+Fresh Templateでは `doctor` は通常 `Bootstrap In Progress` を返します。`AGENTS.md` をAI agentの入口として、`agent/workflows/bootstrap.md` に従ってProduct Goal / Requirements / Constraints / Delivery / Architectureを整理してください。
+
+`init` は既存Directoryを上書きしません。`doctor` はread-only診断、`check` はProject自身の `scripts/check.*` を実行するValidation Interfaceです。
+
 ## Current Phase
 
-Architecture Gateで以下を承認済みです。
-
-- 生成先Templateの正本を `template/` に分離する
-- 初期CLIを TypeScript / Node.js で実装する
-
-初期CLI MVPとして次を実装済みです。
+初期CLI MVPは実装済みです。
 
 - `control-plane init <directory>`
 - `control-plane doctor [directory]`
 - `control-plane check [directory]`
+- `control-plane --help`
+- `control-plane --version`
 
-`bootstrap` / `status` / `update` は初期CLI MVPのOut of Scopeです。
+現在はv0.1.0のnpm Release Readinessを進めています。Repository cloneなしの `npx control-plane init my-app` を公開Golden Pathとします。
 
-## Quick Start
+`bootstrap` / `status` / `update` はv0.1.0のOut of Scopeです。
 
-### 1. Repositoryを取得
+## Development Quick Start
+
+npm公開前、またはcontrol-plane自身を開発する場合:
 
 ```bash
-git clone <control-plane repository URL>
+git clone https://github.com/smallfield5656/control-plane.git
 cd control-plane
-```
-
-### 2. CLI dependencyをinstallしてbuild
-
-```bash
 npm --prefix packages/cli install
-npm --prefix packages/cli run build
-```
-
-### 3. 新しいProjectを生成
-
-Repositoryの1つ上に `my-project` を作る例:
-
-```bash
-node packages/cli/dist/index.js init ../my-project
-```
-
-既存Directoryは上書きしません。
-
-### 4. 生成Projectを診断
-
-```bash
-node packages/cli/dist/index.js doctor ../my-project
-```
-
-Fresh Templateでは通常、次の状態になります。
-
-```text
-Status: Bootstrap In Progress
-```
-
-`doctor` はRepositoryを変更せず、主要asset、Bootstrap placeholder、Proposed ADR、Current Architecture、Project READMEを読み、次Actionを提示します。
-
-### 5. 生成ProjectをValidation
-
-CLIから実行する場合:
-
-```bash
-node packages/cli/dist/index.js check ../my-project
-```
-
-CLIはValidation logicを持たず、対象Projectの既存 `scripts/check.*` を実行します。
-
-直接実行しても同じcontractです。
-
-Linux / macOS / WSL:
-
-```bash
-cd ../my-project
 bash scripts/check.sh
 ```
 
-Windows PowerShell:
+CLIをsource treeから実行する場合:
 
-```powershell
-cd ..\my-project
-.\scripts\check.ps1
+```bash
+npm --prefix packages/cli run build
+node packages/cli/dist/index.js init ../my-app
+node packages/cli/dist/index.js doctor ../my-app
+node packages/cli/dist/index.js check ../my-app
 ```
 
-`doctor` は診断、`check` / `scripts/check.*` はValidationです。
+### Packed artifactを確認する
+
+```bash
+cd packages/cli
+npm pack
+```
+
+`prepack` 時にroot `template/` をpackage artifactへstagingし、`postpack` でstaging copyを削除します。root `template/` だけがSource of Truthです。
 
 ## Repository Structure
 
@@ -98,18 +73,22 @@ control-plane/
 ├── agent/                # control-plane自身のWorkflow / Skill
 ├── scripts/              # product validation
 ├── packages/
-│   └── cli/              # TypeScript / Node.js CLI
-├── template/             # 生成先Project assetの正本
+│   └── cli/              # npm package / TypeScript CLI
+├── template/             # 生成先Project assetの唯一の正本
 └── examples/
 ```
 
 重要な境界:
 
 ```text
-Template / Workflow / Validation contract
-                = Durable Truth
+root template/
+    = Source of Truth
 
-CLI             = 操作Interface
+npm package/template/
+    = pack時だけ作るdistribution artifact
+
+CLI
+    = 操作Interface
 ```
 
 CLIへTemplate本文やWorkflow logicを重複してhard-codeしません。
@@ -120,7 +99,8 @@ CLIへTemplate本文やWorkflow logicを重複してhard-codeしません。
 
 `template/` を新しいDirectoryへ展開します。
 
-- Template本文は `template/` から読む
+- published packageではpackage同梱Templateを利用する
+- source treeではroot `template/` を利用する
 - 既存Directoryを上書きしない
 - partial copyを残しにくいstaging方式を使う
 - 生成Projectは自身の `scripts/check.*` を持つ
@@ -131,13 +111,11 @@ Repositoryを読み、人間向けに状態と次Actionを診断します。
 
 主な状態:
 
-- `Setup Incomplete`: 必須assetが欠けている
-- `Bootstrap In Progress`: Product / Delivery等のplaceholderが残っている
-- `Architecture Gate Pending`: Bootstrap文書が整い、Proposed ADRと未確定Architectureがある
-- `Needs Review`: ADR / Architectureの状態が機械的に安全に確定できない
-- `Ready for Validation`: 文書上のBootstrap準備は整っており、Validationが次Action
-
-`doctor` はWorkflowやRequirementsの新しいSource of Truthではありません。
+- `Setup Incomplete`
+- `Bootstrap In Progress`
+- `Architecture Gate Pending`
+- `Needs Review`
+- `Ready for Validation`
 
 ### `control-plane check [directory]`
 
@@ -145,9 +123,8 @@ Repositoryを読み、人間向けに状態と次Actionを診断します。
 
 - Windowsでは `scripts/check.ps1` を優先
 - その他のPlatformでは `scripts/check.sh` を優先
-- preferred scriptがない場合、利用可能なもう一方へfallback
-- stdout / stderrをそのまま表示
-- Validation scriptのexit codeをCLIへ伝播
+- preferred scriptがない場合は利用可能なもう一方へfallback
+- Validation scriptのexit codeを伝播
 - Validation logicそのものはCLIへ複製しない
 
 ## Development
@@ -182,8 +159,6 @@ control-plane自身の開発でもControl Plane Workflowをdogfoodします。
 - **Complexity must be earned**: 必要性が実証されてから抽象化や仕組みを追加する。
 
 ## Not Yet Added
-
-初期CLI MVPでは以下を前提にしません。
 
 - `control-plane.yml`
 - Project Profile
