@@ -6,7 +6,12 @@
 
 | Milestone | Outcome / Deliverable | Decision Gate | Target | Owner | Status |
 |---|---|---|---|---|---|
-| M1 | TODO | TODO | TODO | TODO | Planned |
+| M1 | CLI Product Goal / Requirements / Constraints / Delivery整理 | Architecture Gate preparation | No fixed date | Maintainer | In Progress |
+| M2 | Repository / Template structure と CLI technology をADRで決定 | Architecture Gate | After M1 | Maintainer / Approver | Planned |
+| M3 | Template asset migration + regression validation | Migration Gate | After M2 | Maintainer | Planned |
+| M4 | `control-plane init` vertical slice | Review | After M3 | Maintainer | Planned |
+| M5 | `control-plane doctor` / `check` | Review | After M4 | Maintainer | Planned |
+| M6 | Windows / Linux validation、documentation、CLI MVP release readiness | Release Gate | After M5 | Maintainer / Approver | Planned |
 
 ## Rules
 
