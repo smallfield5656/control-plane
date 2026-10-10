@@ -2,7 +2,35 @@
 
 `control-plane` は、人間が意図・制約・品質基準を定義し、AIエージェントがその境界内で安全に実装・検証・レビューするための開発テンプレートです。
 
-## Quick Start
+## Quick Tour
+
+まずは `examples/file-organizer/` を順番に見ると、Control Plane の基本フローを短時間で把握できます。
+
+```text
+Idea
+  ↓
+Product Goal
+  ↓
+Requirements / Constraints
+  ↓
+Delivery（Scope / Estimate / Risks / Milestones）
+  ↓
+Architecture / ADR
+  ↓
+Implementation
+```
+
+確認する順番:
+
+1. `examples/file-organizer/overview.md`
+2. `examples/file-organizer/requirements.md`
+3. `examples/file-organizer/constraints.md`
+4. `examples/file-organizer/adr/0001-use-tauri.md`
+5. `examples/file-organizer/ARCHITECTURE.md`
+
+このExampleは、同じ事実を複数ファイルへ重複させず、それぞれの正本をつなげる考え方を示しています。
+
+## Start Your Project
 
 新しいプロジェクトでは、最初に技術スタックを決めません。まず AI agent に次のように依頼してください。
 
@@ -17,7 +45,7 @@
 不足している情報だけを質問し、Requirements / Constraints / Delivery / Architecture / ADR を整理した後で Scaffold してください。
 ```
 
-Golden Path:
+Bootstrap の基本フロー:
 
 ```text
 Product idea
@@ -35,29 +63,45 @@ Spike（不確実性が高い場合のみ）
 Decision / ADR
   ↓
 Scaffold
+```
+
+## Development Flow
+
+Bootstrap 完了後は、変更内容に応じて直接AIへ依頼するか、GitHub IssueなどをWork Intakeとして利用します。Issueの利用は必須ではありません。
+
+```text
+Request / Issue
+  ↓
+AI Triage / Impact Analysis
+  ↓
+必要なら SSOT Update
   ↓
 TDD / Implementation
   ↓
 scripts/check.*
-```
-
-Bootstrap 完了後は、GitHub IssueなどをWork Intakeとして使えます。
-
-```text
-Issue
-  ↓
-AI Triage / Impact Analysis
-  ↓
-SSOT Update
-  ↓
-Implementation
   ↓
 Pull Request
   ↓
 Review / Merge
 ```
 
-Issue自体はSSOTではありません。永続的な合意はRepository上の正本へ反映します。
+GitHub Issueを使う場合、Issue自体はSSOTではありません。Issueやコメント内で合意された永続的な情報は、Requirements / Constraints / Delivery / ADR / ARCHITECTURE.md など、Repository上の正本へ反映します。
+
+詳細は `agent/workflows/issue.md` を参照してください。
+
+## Completion Criteria
+
+Bootstrapは、最低限次の状態になれば完了です。
+
+- Product Goal が明確になっている。
+- Requirements と Constraints が記録されている。
+- Scope、Estimate、主要Risks、Milestones がプロジェクト規模に応じて見える状態になっている。
+- 重要な技術判断が ADR に記録されている。
+- 現在の技術構成が `ARCHITECTURE.md` に反映されている。
+- 不確実性の高い事項について、必要なら Spike の結果が残っている。
+- `scripts/check.*` が成功する。
+
+すべての項目を形式的に増やすことが目的ではありません。小規模プロジェクトでは必要な粒度まで簡略化し、複雑さは必要性が実証されてから導入します。
 
 ## まず見る場所
 
@@ -109,9 +153,3 @@ Issue自体はSSOTではありません。永続的な合意はRepository上の�
 - 候補が拮抗するときのDecision Matrix。
 - Subagent、追加Skill、Harness固有機能。
 - プロジェクト規模に対して過剰なプロセスは導入しない。
-
-## Example
-
-`examples/file-organizer/` には、単純なWindows向けファイル整理ツールを題材に、Product GoalからRequirement、Constraint、ADR、Architectureまでがどうつながるかを示しています。
-
-テンプレートの各ファイルに何を書けばよいか迷った場合は、まずこのExampleを参照してください。
