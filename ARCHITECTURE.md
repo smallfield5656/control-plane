@@ -6,7 +6,7 @@
 
 ## Context
 
-`control-plane` は、AI-assisted developmentを制御するRepository contractと、その導入を支援するCLIから構成する。
+`control-plane` は、AI-assisted developmentを制御するRepository contractと、その導入・診断を支援するCLIから構成する。
 
 ADR-0001 / ADR-0002のArchitecture Gateを通過し、生成先Templateの正本を `template/` に分離し、初期CLIをTypeScript / Node.jsで実装する構成を採用した。
 
@@ -44,10 +44,10 @@ ADR-0001 / ADR-0002のArchitecture Gateを通過し、生成先Templateの正本
 現在実装済み:
 
 - `control-plane init <directory>`
+- `control-plane doctor [directory]`
 
 まだ未実装:
 
-- `doctor`
 - `check`
 - `bootstrap`
 - `status`
@@ -55,11 +55,13 @@ ADR-0001 / ADR-0002のArchitecture Gateを通過し、生成先Templateの正本
 
 ## Components
 
-- `README.md`: 人間向け入口
+- `README.md`: 人間向け入口とCLI Quick Start
 - `AGENTS.md`: control-plane自身のAI agent router
 - `docs/`: control-plane自身のDurable Truth
 - `template/`: 生成先Project assetの正本
-- `packages/cli/`: CLI実装
+- `packages/cli/src/init.ts`: Template展開
+- `packages/cli/src/doctor.ts`: Repository診断
+- `packages/cli/src/index.ts`: CLI command routing
 - `scripts/check.*`: control-plane productのValidation Entry Point
 - `scripts/check-project.*`: CLI + Template固有Validation
 - `examples/`: control-plane自身の完成例
@@ -71,16 +73,34 @@ Product / Architecture / Workflow contract
                  ↓
              template/
                  ↓
-          packages/cli init
+        CLI init / doctor
                  ↓
         Generated Project
 ```
 
 CLIへTemplate本文やWorkflow truthを重複してhard-codeしない。
 
+`doctor` は既存Repository contractを読む診断Interfaceであり、Bootstrap WorkflowそのものをCLIへ複製しない。
+
 ## Data Flow
 
+### init
+
 `control-plane init <directory>` は `template/` を読み、既存targetを上書きせず新しいDirectoryへ展開する。
+
+### doctor
+
+`control-plane doctor [directory]` は対象Repositoryをread-onlyで確認する。
+
+診断対象は以下に限定する。
+
+- 必須Control Plane assetの存在
+- Product / Delivery文書の未完了placeholder
+- Proposed ADRの存在
+- Current Architectureの未確定状態
+- Project READMEがTemplateのまま残っていないか
+
+`doctor` はValidationを実行せず、Validation成功やBootstrap Completeを推測しない。文書上の準備が整った場合は `Ready for Validation` とし、次Actionとして `scripts/check.*` を案内する。
 
 生成後のProjectは自身の `scripts/check.*` をValidation Entry Pointとして持つ。
 
