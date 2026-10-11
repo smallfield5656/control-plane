@@ -241,3 +241,16 @@ test("an approval item cannot silently approve an empty scope", async t => {
   assert.equal(run(root, "approve", "product-overview").status, 1);
   assert.equal(await read(root, stateFile), before);
 });
+test("ADR status updates ignore fenced metadata examples before the real header", async t => {
+  for (const operation of ["approve", "reject"]) {
+    const root = await fixture(t);
+    upstream(root);
+    const example = "```text\n- Status: Proposed\n```\n\n";
+    await write(root, adrFile, adr().replace("- Status: Proposed", example + "- Status: Proposed"));
+    ok(root, operation, "adr", "0001", ...(operation === "reject" ? ["--reason", "Choose another approach."] : []));
+    const text = await read(root, adrFile);
+    assert.ok(text.includes(example), "fenced example must remain byte-identical");
+    assert.ok(text.includes(`\n- Status: ${operation === "approve" ? "Accepted" : "Rejected"}\n`));
+    ok(root, "approve", "architecture");
+  }
+});

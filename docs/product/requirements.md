@@ -118,7 +118,7 @@ CLIは導入・診断・次Action案内・検証、明示的な承認・却下�
 - [ ] `control-plane next [directory]` はRepositoryを変更しない。
 - [ ] `control-plane bootstrap [directory]` は後方互換のAliasとして `next` と同じ結果を返す。
 - [ ] Projectのstateに定義された項目名で進捗を表示する。新Templateの命名はREQ-011に従い、既存ProjectのID・labelも尊重する。
-- [ ] Bootstrap In Progressでは、`Next Step` / `Work On` / `Goal` / `Suggested Instruction` を表示し、人間が次に触る具体的なRepository pathを確認できる。
+- [ ] 文書準備が必要なBootstrap In Progressでは、`Next Step` / `Work On` / `Goal` / `Suggested Instruction` を表示し、人間が次に触る具体的なRepository pathを確認できる。schema v2の準備済み項目は `Approval Pending` と実行コマンドを表示し、文書の再編集を指示しない。
 - [ ] `Suggested Instruction` はAI Agentへ単体でコピーして意味が通るよう、対象pathを明示し、「上記ファイル」等の外部文脈依存表現を使わない。
 - [ ] `Suggested Instruction` は `AGENTS.md` と関連Workflowへの入口、現在のObjective、Work Scope、Stop Conditionに限定し、Workflow本文を重複しない。
 - [ ] Product Definition / Delivery Framing / Architecture Preparation / Architecture Gate / Bootstrap Finalization / Ongoing DevelopmentをRepository状態から段階的に案内し、完了済み項目を次のWork Scopeへ含めない。

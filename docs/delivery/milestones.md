@@ -34,7 +34,7 @@
 - `0.3.0` では明示的人間承認とrevision検証を公開し、Staged Packagesの人間承認、公開artifactのchecksum照合、Golden Path確認、GitHub Releaseを完了した。
 - 次Releaseの目標は、CLI承認・却下とBash / PowerShell補完を配布し、npmとGitHub Releaseの両方を完了すること。Issue #32 / #33はWork Intakeとして受け付け、永続要求は `../product/requirements.md`、Scopeは `charter.md` へ反映した。
 - Release候補は `0.4.0`。新しいCLI操作・state移行を含むminor更新として公開準備中。package versionの正本は `packages/cli/package.json`。
-- ADR-0007 / ADR-0008は人間の承認を経てAcceptedとなり、Current Architectureへ反映した。Localの `scripts/check.sh` は78 tests / 78 passed（BashとPowerShellの実補完、packed artifactを含む）で成功した。CIと公開準備を進めている。公開完了はM16で別途確認する。
+- ADR-0007 / ADR-0008は人間の承認を経てAcceptedとなり、Current Architectureへ反映した。Localの `scripts/check.sh` は79 tests / 79 passed（BashとPowerShellの実補完、packed artifact、コード例中のStatusを変更しない回帰テストを含む）で成功した。CIと公開準備を進めている。公開完了はM16で別途確認する。
 
 ## Current Release Completion Gate
 

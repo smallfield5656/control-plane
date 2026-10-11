@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { adrUpstream, assertAdrPrepared, inspectAdrs, normalizeReason, rejectText, resolveAdr, sameRevisions } from "./adr.js";
+import { adrUpstream, assertAdrPrepared, inspectAdrs, normalizeReason, rejectText, resolveAdr, sameRevisions, setAdrStatus } from "./adr.js";
 import { APPROVAL_JOURNAL, commitApprovalTransaction, recoverApprovalTransaction, transactionPending, withApprovalLock, type Change } from "./approval-transaction.js";
 import { BOOTSTRAP_STATE_FILE, hashBootstrapInput, hashText, hasBootstrapPlaceholder, parseDefinition, readBootstrapState, type AdrDecisionRecord, type BootstrapStateDefinition } from "./bootstrap-state.js";
 import { plainStyles, type OutputStyles } from "./output.js";
@@ -77,7 +77,7 @@ export async function recordDecision(rootDir: string, operation: "approve" | "re
         const adopted = definition.adr.decisions[oldNumber];
         if (old.status !== "Accepted" || adopted?.kind !== "accepted" || adopted.file !== old.file || adopted.revision !== old.revision) throw new Error(`Cannot Supersede ADR-${oldNumber}: existing Accepted content / adoption record does not match. Restore or migrate it first.`);
       }
-      const updated = document.text.replace(/^- Status: Proposed(\r?)$/m, "- Status: Accepted$1");
+      const updated = setAdrStatus(document, "Accepted");
       const adoption: AdrDecisionRecord = { kind: "accepted", file: document.file, revision: hashText(updated), decisionRevision: document.decisionRevision, upstream };
       definition.adr.decisions[number] = adoption;
       const change = { file: document.file, before: await readFile(path.join(root, document.file)), after: Buffer.from(updated) };

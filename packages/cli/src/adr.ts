@@ -86,6 +86,14 @@ export function assertAdrPrepared(document: AdrDocument): void {
     if (!body || /^(?:[-*]\s*)?\.\.\.$/.test(body)) throw new Error(`ADR requires completed ${name}: ${document.file}`);
   }
 }
+export function setAdrStatus(document: AdrDocument, status: AdrStatus): string {
+  const index = unfencedLines(document.text).findIndex(line => line === `- Status: ${document.status}`);
+  if (index < 0) throw new Error(`Missing ADR Status: ${document.file}`);
+  // Retain each original line ending and update only the parsed, unfenced header.
+  const parts = document.text.split(/(\r\n|\r|\n)/);
+  parts[index * 2] = `- Status: ${status}`;
+  return parts.join("");
+}
 export function normalizeReason(reason: string): string {
   const normalized = reason.replace(/\r\n?/g, "\n").trim();
   if (!normalized || /[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/.test(normalized) || Buffer.byteLength(normalized) > 64 * 1024) throw new Error("Rejection reason must be non-empty text without control characters (max 64 KiB).");
@@ -107,7 +115,7 @@ export function rejectText(document: AdrDocument, reason: string): string {
   const fence = "`".repeat(Math.max(3, ...[...reason.matchAll(/`+/g)].map(match => match[0].length + 1)));
   const section = `\n## Rejection Reason\n\n${fence}text\n${reason}\n${fence}\n`;
   const result = rawLines.slice(0, start).join("\n").replace(/\n*$/, "") + section + rawLines.slice(end).join("\n");
-  const updated = result.replace(/^- Status: Proposed$/m, "- Status: Rejected");
+  const updated = setAdrStatus({ ...document, text: result }, "Rejected");
   return document.text.includes("\r\n") ? updated.replace(/\n/g, "\r\n") : updated;
 }
 export async function adrUpstream(root: string, state: ResolvedBootstrapState, requireComplete = true): Promise<Record<string, string>> {
