@@ -16,7 +16,9 @@ npm package名は `@smallfield5656/control-plane`、実行されるCLI bin名は
 
 `init` はControl Plane Templateを新規Directoryへ展開します。既存Directoryは上書きしません。
 
-`bootstrap` はRepositoryを変更せず、Bootstrapの現在地、Human Gate、次Actionを固定ルールで表示します。AI APIは利用せず、ADRの承認・却下も行いません。
+`bootstrap` はRepositoryを変更せず、Bootstrapの現在地を固定ルールで判定します。Bootstrap中は `Next Step` / `Work On` / `Goal` / `Suggested Instruction` を表示し、次に触る具体的なRepository pathとAI Agentへコピーできる短いInstructionを案内します。Architecture Gateでは `Review Inputs` / `Human Gate` / `Decision` を表示し、人間の判断を優先します。
+
+CLIはAI APIを利用せず、ADRの承認・却下やRepository更新も行いません。詳細なWorkflowはRepository上の `AGENTS.md` と関連WorkflowがSource of Truthであり、Suggested Instructionはそれらへの入口だけを示します。
 
 ## Commands
 

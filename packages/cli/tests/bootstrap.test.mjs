@@ -26,17 +26,25 @@ async function fixtureFromTemplate() {
   return { root, project };
 }
 
-async function completeBootstrapDocs(project) {
+async function completeProductDefinition(project) {
   await writeFile(path.join(project, "docs/product/overview.md"), "# Product Overview\n\n## Problem\nNeed a tool.\n\n## Users\nDevelopers.\n\n## Goals\nShip safely.\n\n## Non-Goals\nCloud service.\n\n## Success Criteria\nValidation passes.\n");
   await writeFile(path.join(project, "docs/product/requirements.md"), "# Requirements\n\n## Requirements\n\n### REQ-001: Run\n\n**Statement**\nRun locally.\n\n**Acceptance Criteria**\n- [ ] Runs.\n");
   await writeFile(path.join(project, "docs/product/constraints.md"), "# Constraints\n\n## Platform\nDesktop.\n\n## Distribution\nLocal.\n\n## Security / Privacy\nNo sensitive data.\n\n## Network\nOffline.\n\n## Data\nLocal.\n\n## Operations\nSingle user.\n\n## Team / Skills\nOne maintainer.\n\n## Cost\nNo paid service.\n\n## Project Stage\nMVP.\n");
+}
+
+async function completeDelivery(project) {
   await writeFile(path.join(project, "docs/delivery/charter.md"), "# Project Charter\n\n## Scope\nMVP.\n");
   await writeFile(path.join(project, "docs/delivery/estimate.md"), "# Estimate\n\n## Confidence\nMedium.\n");
   await writeFile(path.join(project, "docs/delivery/risks.md"), "# Risks\n\n## Risk Register\nNo major risks.\n");
   await writeFile(path.join(project, "docs/delivery/milestones.md"), "# Milestones\n\n## Milestone Plan\nMVP.\n");
 }
 
-test("bootstrap reports fresh template progress with Japanese guidance", async () => {
+async function completeBootstrapDocs(project) {
+  await completeProductDefinition(project);
+  await completeDelivery(project);
+}
+
+test("bootstrap turns fresh project state into copyable Product Definition guidance", async () => {
   const { root, project } = await fixtureFromTemplate();
   const { bootstrapProject, formatBootstrapReport } = await import(moduleUrl);
 
@@ -44,11 +52,55 @@ test("bootstrap reports fresh template progress with Japanese guidance", async (
   const output = formatBootstrapReport(report);
 
   assert.equal(report.phase, "Bootstrap In Progress");
-  assert.match(output, /Current State:/);
-  assert.match(output, /Product Goal\s+Pending/);
-  assert.match(output, /Next Action:/);
-  assert.match(output, /Product Goal \/ Requirements \/ Constraints \/ Delivery/);
+  assert.equal(report.nextStep, "Product Definition");
+  assert.deepEqual(report.workOn, ["docs/product/overview.md", "docs/product/requirements.md"]);
+  assert.match(output, /Next Step:\s+Product Definition/);
+  assert.match(output, /Work On:\s+docs\/product\/overview\.md\s+docs\/product\/requirements\.md/);
+  assert.match(output, /Goal:/);
+  assert.match(output, /Product Goalと主要Requirements \/ Acceptance Criteria/);
+  assert.match(output, /Suggested Instruction:/);
+  assert.match(output, /docs\/product\/overview\.md と docs\/product\/requirements\.md を更新してください/);
+  assert.doesNotMatch(output, /上記ファイル/);
+  assert.match(output, /ArchitectureやTechnologyの選定には進まないでください/);
   assert.match(output, /Human Gate:\s+None/);
+  await rm(root, { recursive: true, force: true });
+});
+
+test("bootstrap moves to Delivery Framing and lists only incomplete delivery files", async () => {
+  const { root, project } = await fixtureFromTemplate();
+  await completeProductDefinition(project);
+  const { bootstrapProject, formatBootstrapReport } = await import(moduleUrl);
+
+  const report = await bootstrapProject(project);
+  const output = formatBootstrapReport(report);
+
+  assert.equal(report.nextStep, "Delivery Framing");
+  assert.deepEqual(report.workOn, [
+    "docs/delivery/charter.md",
+    "docs/delivery/estimate.md"
+  ]);
+  assert.match(output, /Suggested Instruction:/);
+  assert.match(output, /docs\/delivery\/charter\.md/);
+  assert.match(output, /docs\/delivery\/estimate\.md/);
+  assert.doesNotMatch(output, /docs\/delivery\/risks\.md と docs\/delivery\/milestones\.md/);
+  assert.match(output, /ArchitectureやTechnologyの選定にはまだ進まないでください/);
+  await rm(root, { recursive: true, force: true });
+});
+
+test("bootstrap moves to Architecture Preparation after durable inputs are complete", async () => {
+  const { root, project } = await fixtureFromTemplate();
+  await completeBootstrapDocs(project);
+  const { bootstrapProject, formatBootstrapReport } = await import(moduleUrl);
+
+  const report = await bootstrapProject(project);
+  const output = formatBootstrapReport(report);
+
+  assert.equal(report.nextStep, "Architecture Preparation");
+  assert.deepEqual(report.workOn, ["docs/architecture/adr/"]);
+  assert.match(output, /Architecture \/ Technology候補を比較/);
+  assert.match(output, /docs\/architecture\/adr\//);
+  assert.match(output, /Proposed ADR/);
+  assert.match(output, /Architecture Gateで停止してください/);
   await rm(root, { recursive: true, force: true });
 });
 
@@ -65,19 +117,32 @@ test("bootstrap exposes review inputs and a Proposed ADR as a decision-oriented 
   const output = formatBootstrapReport(report);
 
   assert.equal(report.phase, "Architecture Gate Pending");
+  assert.equal(report.nextStep, "Architecture Gate");
   assert.deepEqual(report.reviewInputs, reviewInputs);
   assert.deepEqual(report.humanGate?.adrs.map((adr) => adr.title), ["ADR-0001: React + IndexedDBを採用する"]);
   assert.deepEqual(report.humanGate?.adrs.map((adr) => adr.file), ["docs/architecture/adr/0001-runtime.md"]);
-  assert.match(output, /Architecture Gate:\s+Pending/);
   assert.match(output, /Review Inputs:/);
-  for (const reviewInput of reviewInputs) {
-    assert.match(output, new RegExp(reviewInput.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-  }
   assert.match(output, /Human Gate:/);
-  assert.match(output, /ADR-0001: React \+ IndexedDBを採用する/);
   assert.match(output, /Decision:/);
-  assert.match(output, /docs\/architecture\/adr\/0001-runtime\.md/);
   assert.match(output, /承認または却下してください/);
+  assert.doesNotMatch(output, /Suggested Instruction:/);
+  await rm(root, { recursive: true, force: true });
+});
+
+test("bootstrap guides finalization after architecture is resolved", async () => {
+  const { root, project } = await fixtureFromTemplate();
+  await completeBootstrapDocs(project);
+  await writeFile(path.join(project, "ARCHITECTURE.md"), "# Architecture\n\n## Context\nCurrent architecture.\n\n## Technology Stack\nNode.js.\n");
+  const { bootstrapProject, formatBootstrapReport } = await import(moduleUrl);
+
+  const report = await bootstrapProject(project);
+  const output = formatBootstrapReport(report);
+
+  assert.equal(report.phase, "Bootstrap In Progress");
+  assert.equal(report.nextStep, "Bootstrap Finalization");
+  assert.deepEqual(report.workOn, ["README.md"]);
+  assert.match(output, /README\.mdをProject固有の入口に更新してください/);
+  assert.match(output, /control-plane check/);
   await rm(root, { recursive: true, force: true });
 });
 
@@ -92,7 +157,10 @@ test("bootstrap reports completion when bootstrap state is resolved", async () =
   const output = formatBootstrapReport(report);
 
   assert.equal(report.phase, "Bootstrap Complete");
+  assert.equal(report.nextStep, "Complete");
+  assert.deepEqual(report.workOn, []);
   assert.match(output, /Human Gate:\s+None/);
+  assert.doesNotMatch(output, /Suggested Instruction:/);
   assert.match(output, /control-plane check/);
   await rm(root, { recursive: true, force: true });
 });

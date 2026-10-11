@@ -10,16 +10,30 @@ export type BootstrapPhase =
   | "Bootstrap Complete";
 
 export type BootstrapItemStatus = "Complete" | "Pending" | "Needs Review";
+export type BootstrapNextStep =
+  | "Setup Recovery"
+  | "Product Definition"
+  | "Delivery Framing"
+  | "Architecture Preparation"
+  | "Architecture Gate"
+  | "Needs Review"
+  | "Bootstrap Finalization"
+  | "Complete";
 
-const REVIEW_INPUTS = [
+const PRODUCT_FILES = [
   "docs/product/overview.md",
   "docs/product/requirements.md",
-  "docs/product/constraints.md",
+  "docs/product/constraints.md"
+] as const;
+
+const DELIVERY_FILES = [
   "docs/delivery/charter.md",
   "docs/delivery/estimate.md",
   "docs/delivery/risks.md",
   "docs/delivery/milestones.md"
 ] as const;
+
+const REVIEW_INPUTS = [...PRODUCT_FILES, ...DELIVERY_FILES] as const;
 
 export interface BootstrapStateItem {
   label: "Product Goal" | "Requirements" | "Constraints" | "Delivery" | "Architecture";
@@ -43,6 +57,10 @@ export interface BootstrapReport {
   architectureGate: "Pending" | "None";
   reviewInputs: string[];
   humanGate?: BootstrapHumanGate;
+  nextStep: BootstrapNextStep;
+  workOn: string[];
+  goal?: string;
+  suggestedInstruction?: string;
   nextAction: string;
   hasErrors: boolean;
 }
@@ -94,31 +112,18 @@ async function proposedAdrs(root: string): Promise<BootstrapAdr[]> {
   return result.sort((a, b) => a.file.localeCompare(b.file));
 }
 
-function productState(report: DoctorReport): BootstrapStateItem[] {
+function productState(report: DoctorReport, phase: BootstrapPhase): BootstrapStateItem[] {
   const setupIncomplete = report.status === "Setup Incomplete";
   const productGoal = setupIncomplete ? false : bootstrapDocOk(report, "docs/product/overview.md");
   const requirements = setupIncomplete ? false : bootstrapDocOk(report, "docs/product/requirements.md");
   const constraints = setupIncomplete ? false : bootstrapDocOk(report, "docs/product/constraints.md");
-  const delivery = setupIncomplete
-    ? false
-    : [
-        "docs/delivery/charter.md",
-        "docs/delivery/estimate.md",
-        "docs/delivery/risks.md",
-        "docs/delivery/milestones.md"
-      ].every((relative) => bootstrapDocOk(report, relative));
+  const delivery = setupIncomplete ? false : DELIVERY_FILES.every((relative) => bootstrapDocOk(report, relative));
 
   let architecture: BootstrapItemStatus = "Pending";
-  if (report.status === "Ready for Validation") {
+  if (phase === "Bootstrap Complete" || (phase === "Bootstrap In Progress" && checkOk(report, "Current Architecture"))) {
     architecture = "Complete";
-  } else if (report.status === "Needs Review") {
+  } else if (phase === "Needs Review") {
     architecture = "Needs Review";
-  } else if (
-    report.status === "Bootstrap In Progress" &&
-    productGoal && requirements && constraints && delivery &&
-    checkOk(report, "Current Architecture")
-  ) {
-    architecture = "Complete";
   }
 
   return [
@@ -130,7 +135,74 @@ function productState(report: DoctorReport): BootstrapStateItem[] {
   ];
 }
 
-function nextAction(report: DoctorReport, phase: BootstrapPhase, proposed: BootstrapAdr[]): string {
+function formatFileList(files: string[]): string {
+  return files.join(" と ");
+}
+
+function guidance(report: DoctorReport, phase: BootstrapPhase): Pick<BootstrapReport, "nextStep" | "workOn" | "goal" | "suggestedInstruction"> {
+  if (phase === "Setup Incomplete") {
+    return { nextStep: "Setup Recovery", workOn: [] };
+  }
+  if (phase === "Architecture Gate Pending") {
+    return { nextStep: "Architecture Gate", workOn: [] };
+  }
+  if (phase === "Needs Review") {
+    return { nextStep: "Needs Review", workOn: ["ARCHITECTURE.md", "docs/architecture/adr/"] };
+  }
+  if (phase === "Bootstrap Complete") {
+    return { nextStep: "Complete", workOn: [] };
+  }
+
+  const pendingProduct = PRODUCT_FILES.filter((relative) => !bootstrapDocOk(report, relative));
+  if (pendingProduct.length > 0) {
+    return {
+      nextStep: "Product Definition",
+      workOn: [...pendingProduct],
+      goal: "Product Goalと主要Requirements / Acceptance Criteria、必要なConstraintsを定義してください。",
+      suggestedInstruction:
+        `AGENTS.md と agent/workflows/bootstrap.md を読んでください。\n` +
+        `私と壁打ちしながらProduct Definitionを進め、${formatFileList([...pendingProduct])} を更新してください。\n` +
+        "ArchitectureやTechnologyの選定には進まないでください。"
+    };
+  }
+
+  const pendingDelivery = DELIVERY_FILES.filter((relative) => !bootstrapDocOk(report, relative));
+  if (pendingDelivery.length > 0) {
+    return {
+      nextStep: "Delivery Framing",
+      workOn: [...pendingDelivery],
+      goal: "Scope / Estimate / Risks / Milestonesを必要な粒度で整理してください。",
+      suggestedInstruction:
+        `AGENTS.md と agent/workflows/bootstrap.md を読んでください。\n` +
+        `Product Goal、Requirements、Constraintsを前提として、${formatFileList([...pendingDelivery])} を整理してください。\n` +
+        "ArchitectureやTechnologyの選定にはまだ進まないでください。"
+    };
+  }
+
+  if (!checkOk(report, "Current Architecture")) {
+    return {
+      nextStep: "Architecture Preparation",
+      workOn: ["docs/architecture/adr/"],
+      goal: "Requirements / Constraints / DeliveryからArchitecture / Technology候補を比較し、判断が必要ならProposed ADRを準備してください。",
+      suggestedInstruction:
+        "AGENTS.md と agent/workflows/bootstrap.md を読んでください。\n" +
+        "Requirements、Constraints、Delivery情報を確認し、Architecture / Technology候補を比較してください。\n" +
+        "長期的なDecisionは docs/architecture/adr/ にProposed ADRとして記録し、Acceptedには変更せずArchitecture Gateで停止してください。"
+    };
+  }
+
+  return {
+    nextStep: "Bootstrap Finalization",
+    workOn: ["README.md"],
+    goal: "Bootstrap後のProject入口とValidation導線を完成させてください。",
+    suggestedInstruction:
+      "AGENTS.md と agent/workflows/bootstrap.md を読んでください。\n" +
+      "AcceptedなArchitectureを前提として、README.mdをProject固有の入口に更新してください。\n" +
+      "必要なBootstrap項目を完了し、最後に control-plane check を実行できる状態にしてください。"
+  };
+}
+
+function nextAction(phase: BootstrapPhase, proposed: BootstrapAdr[], nextStep: BootstrapNextStep): string {
   if (phase === "Setup Incomplete") {
     return "Control Planeの必須assetを復元するか、新しいProjectをinitしてください。";
   }
@@ -143,34 +215,31 @@ function nextAction(report: DoctorReport, phase: BootstrapPhase, proposed: Boots
   if (phase === "Bootstrap Complete") {
     return "Bootstrapは完了しています。control-plane check でProject全体をValidationしてください。";
   }
-
-  const docsComplete = REVIEW_INPUTS.every((relative) => bootstrapDocOk(report, relative));
-  if (!docsComplete) {
-    return "agent/workflows/bootstrap.md に従い、Product Goal / Requirements / Constraints / Deliveryを整理してください。";
-  }
-
-  return "Project固有のREADMEなど、残っているBootstrap項目を完了してください。";
+  return `${nextStep} を進めてください。`;
 }
 
 export async function bootstrapProject(rootDir = process.cwd()): Promise<BootstrapReport> {
   const report = await doctorProject(rootDir);
   const proposed = await proposedAdrs(report.root);
+  const architectureUnresolved = !checkOk(report, "Current Architecture");
 
-  const phase: BootstrapPhase =
-    report.status === "Ready for Validation" ? "Bootstrap Complete" : report.status;
+  let phase: BootstrapPhase = report.status === "Ready for Validation" ? "Bootstrap Complete" : report.status;
+  if (report.status === "Needs Review" && proposed.length === 0 && architectureUnresolved) {
+    phase = "Bootstrap In Progress";
+  }
+
   const architectureGate = phase === "Architecture Gate Pending" ? "Pending" : "None";
+  const stepGuidance = guidance(report, phase);
 
   return {
     root: report.root,
     phase,
-    state: productState(report),
+    state: productState(report, phase),
     architectureGate,
     reviewInputs: [...REVIEW_INPUTS],
-    humanGate:
-      architectureGate === "Pending"
-        ? { type: "Architecture Gate", adrs: proposed }
-        : undefined,
-    nextAction: nextAction(report, phase, proposed),
+    humanGate: architectureGate === "Pending" ? { type: "Architecture Gate", adrs: proposed } : undefined,
+    ...stepGuidance,
+    nextAction: nextAction(phase, proposed, stepGuidance.nextStep),
     hasErrors: report.hasErrors
   };
 }
@@ -201,6 +270,26 @@ export function formatBootstrapReport(report: BootstrapReport): string {
     }
   } else {
     lines.push("  None");
+  }
+
+  lines.push("", "Next Step:", `  ${report.nextStep}`);
+
+  if (report.workOn.length > 0) {
+    lines.push("", "Work On:");
+    for (const file of report.workOn) {
+      lines.push(`  ${file}`);
+    }
+  }
+
+  if (report.goal) {
+    lines.push("", "Goal:", `  ${report.goal}`);
+  }
+
+  if (report.suggestedInstruction) {
+    lines.push("", "Suggested Instruction:");
+    for (const line of report.suggestedInstruction.split("\n")) {
+      lines.push(`  ${line}`);
+    }
   }
 
   lines.push("", "Next Action:", `  ${report.nextAction}`);
