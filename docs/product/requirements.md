@@ -105,14 +105,18 @@ v0.1.0の初期CLIは `init / doctor / check` に限定し、必要性が未実�
 
 - [ ] `control-plane bootstrap [directory]` はRepositoryを変更しない。
 - [ ] Product Goal / Requirements / Constraints / Delivery / Architectureの進捗を表示する。
+- [ ] Bootstrap In Progressでは、`Next Step` / `Work On` / `Goal` / `Suggested Instruction` を表示し、人間が次に触る具体的なRepository pathを確認できる。
+- [ ] `Suggested Instruction` はAI Agentへ単体でコピーして意味が通るよう、対象pathを明示し、「上記ファイル」等の外部文脈依存表現を使わない。
+- [ ] `Suggested Instruction` は `AGENTS.md` と関連Workflowへの入口、現在のObjective、Work Scope、Stop Conditionに限定し、Workflow本文を重複しない。
+- [ ] Product Definition / Delivery Framing / Architecture Preparation / Architecture Gate / Bootstrap FinalizationをRepository状態から段階的に案内し、完了済み項目を次のWork Scopeへ含めない。
 - [ ] Proposed ADRがArchitecture Gate待ちなら、対象ADRをHuman Gateとして表示する。
 - [ ] Human Gateでは、Decisionの判断材料となる主要なRepository SSOTを `Review Inputs` として表示する。
-- [ ] Human Gateでは、承認対象となるADRのRepository pathを `Decision` として表示する。
+- [ ] Human Gateでは、承認対象となるADRのRepository pathを `Decision` として表示し、`Suggested Instruction` より人間の判断を優先する。
 - [ ] Approvalはfile-orientedではなくdecision-orientedに扱い、Product / Delivery文書自体へ承認状態を追加しない。
 - [ ] Human Gateの承認・却下をCLI自身は実行しない。
 - [ ] 専用の承認ログをCLIやTemplateへ追加しない。監査等で必要な場合のみProject固有要件として導入する。
 - [ ] 同じRepository状態から同じ判定と固定メッセージを返し、AI APIを利用しない。
-- [ ] 短い英語ラベルと日本語説明を組み合わせて次Actionを表示する。
+- [ ] 短い英語ラベルと日本語説明を組み合わせる。
 
 **Out of Scope**
 
@@ -120,5 +124,7 @@ v0.1.0の初期CLIは `init / doctor / check` に限定し、必要性が未実�
 - ADRの自動承認・却下
 - AI/LLMによる文面生成
 - Approval history管理
+- Issue番号の自動取得・推測
+- 通常開発全体のPrompt generator
 - `status` command
 - `--lang` / `--json`
