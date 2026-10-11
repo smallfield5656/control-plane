@@ -57,6 +57,8 @@ test("repository template contains the generated project contract", async () => 
     "docs/product/constraints.md",
     "docs/delivery/estimate.md",
     "docs/architecture/adr/0000-template.md",
+    ".agents/skills/project-bootstrap/SKILL.md",
+    ".agents/skills/tdd/SKILL.md",
     "agent/workflows/bootstrap.md",
     "agent/workflows/issue.md",
     "scripts/check.sh",
@@ -64,6 +66,8 @@ test("repository template contains the generated project contract", async () => 
   ]) {
     assert.ok((await readFile(path.join(template, relative), "utf8")).length >= 0, relative);
   }
+
+  await assert.rejects(() => readFile(path.join(template, "agent/skills/project-bootstrap/SKILL.md"), "utf8"));
 });
 
 test("estimate template separates AI elapsed time, human involvement, and human-only baseline", async () => {
