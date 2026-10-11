@@ -112,7 +112,7 @@ async function proposedAdrs(root: string): Promise<BootstrapAdr[]> {
   return result.sort((a, b) => a.file.localeCompare(b.file));
 }
 
-function productState(report: DoctorReport): BootstrapStateItem[] {
+function productState(report: DoctorReport, phase: BootstrapPhase): BootstrapStateItem[] {
   const setupIncomplete = report.status === "Setup Incomplete";
   const productGoal = setupIncomplete ? false : bootstrapDocOk(report, "docs/product/overview.md");
   const requirements = setupIncomplete ? false : bootstrapDocOk(report, "docs/product/requirements.md");
@@ -120,16 +120,10 @@ function productState(report: DoctorReport): BootstrapStateItem[] {
   const delivery = setupIncomplete ? false : DELIVERY_FILES.every((relative) => bootstrapDocOk(report, relative));
 
   let architecture: BootstrapItemStatus = "Pending";
-  if (report.status === "Ready for Validation") {
+  if (phase === "Bootstrap Complete" || (phase === "Bootstrap In Progress" && checkOk(report, "Current Architecture"))) {
     architecture = "Complete";
-  } else if (report.status === "Needs Review") {
+  } else if (phase === "Needs Review") {
     architecture = "Needs Review";
-  } else if (
-    report.status === "Bootstrap In Progress" &&
-    productGoal && requirements && constraints && delivery &&
-    checkOk(report, "Current Architecture")
-  ) {
-    architecture = "Complete";
   }
 
   return [
@@ -208,7 +202,7 @@ function guidance(report: DoctorReport, phase: BootstrapPhase): Pick<BootstrapRe
   };
 }
 
-function nextAction(report: DoctorReport, phase: BootstrapPhase, proposed: BootstrapAdr[], nextStep: BootstrapNextStep): string {
+function nextAction(phase: BootstrapPhase, proposed: BootstrapAdr[], nextStep: BootstrapNextStep): string {
   if (phase === "Setup Incomplete") {
     return "Control Planeの必須assetを復元するか、新しいProjectをinitしてください。";
   }
@@ -227,20 +221,25 @@ function nextAction(report: DoctorReport, phase: BootstrapPhase, proposed: Boots
 export async function bootstrapProject(rootDir = process.cwd()): Promise<BootstrapReport> {
   const report = await doctorProject(rootDir);
   const proposed = await proposedAdrs(report.root);
+  const architectureUnresolved = !checkOk(report, "Current Architecture");
 
-  const phase: BootstrapPhase = report.status === "Ready for Validation" ? "Bootstrap Complete" : report.status;
+  let phase: BootstrapPhase = report.status === "Ready for Validation" ? "Bootstrap Complete" : report.status;
+  if (report.status === "Needs Review" && proposed.length === 0 && architectureUnresolved) {
+    phase = "Bootstrap In Progress";
+  }
+
   const architectureGate = phase === "Architecture Gate Pending" ? "Pending" : "None";
   const stepGuidance = guidance(report, phase);
 
   return {
     root: report.root,
     phase,
-    state: productState(report),
+    state: productState(report, phase),
     architectureGate,
     reviewInputs: [...REVIEW_INPUTS],
     humanGate: architectureGate === "Pending" ? { type: "Architecture Gate", adrs: proposed } : undefined,
     ...stepGuidance,
-    nextAction: nextAction(report, phase, proposed, stepGuidance.nextStep),
+    nextAction: nextAction(phase, proposed, stepGuidance.nextStep),
     hasErrors: report.hasErrors
   };
 }
