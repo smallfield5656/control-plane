@@ -29,6 +29,14 @@ Constraint は技術選定より前に存在する外部条件・事業条件・
 
 見積もりはまず person-hours / person-days 等の Effort range と Confidence を示す。単価が与えられている場合のみCostへ変換し、不明な単価を推測しない。
 
+AI Agentと協働する場合、`estimate.md` では次を分けて示す。
+
+- **AI Agent Elapsed**: AI Agentが分析・生成・検証等に要する経過時間。Human laborではない。
+- **Human Involvement**: 壁打ち、判断、レビュー、承認、修正指示など、人間が実際に関与する時間。
+- **Human-only Equivalent**: 同じScopeと品質条件をAI Agentなしで人間だけが実施した場合の推定工数。
+
+`AI Agent Elapsed` と `Human Involvement` は性質が異なるため総工数として単純合算しない。Human-only Equivalentが実測でない場合は比較用の反実仮想Estimateとして扱い、AssumptionsとConfidenceを明示する。AI-assisted / Human-onlyを比較するときはScopeと品質条件を揃える。
+
 ## 5. Quality Attributes
 
 特に重要な品質特性を明確にする。
@@ -113,6 +121,7 @@ Architecture Gate待ちとして停止する前に次を確認する。
 - 主要Requirements / Acceptance Criteriaが定義されている
 - ConstraintsがTechnology Decisionと分離されている
 - Scope / Effort Estimate /主要Risks / Milestonesが必要な粒度で整理されている
+- AI協働Projectでは、AI Agent Elapsed / Human Involvement / Human-only Equivalentが区別されている
 - 主要なArchitecture / Technology候補と推奨理由を説明できる
 - 人間承認が必要な判断がADR `Proposed` として記録されている
 - 未承認Technologyを `ARCHITECTURE.md` の現在状態として既成事実化していない
@@ -127,6 +136,7 @@ Bootstrap完了と報告する前に次を確認する。
 - 主要Requirements / Acceptance Criteriaが定義されている
 - ConstraintsがTechnology Decisionと分離されている
 - Scope / Effort Estimate /主要Risks / Milestonesが必要な粒度で整理されている
+- AI協働Projectでは、AI Agent Elapsed / Human Involvement / Human-only Equivalentが区別されている
 - 主要なArchitecture / Technology decisionが説明できる
 - 人間承認が必要なADRはArchitecture Gateを通過し、状態が反映されている
 - `ARCHITECTURE.md` が現在状態を表している
