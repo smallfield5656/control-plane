@@ -1,6 +1,7 @@
 import { access } from "node:fs/promises";
 import path from "node:path";
 import { spawn } from "node:child_process";
+import { createStyles, type OutputOptions } from "./output.js";
 
 export class CheckError extends Error {}
 
@@ -49,15 +50,19 @@ export async function resolveCheckCommand(rootDir = process.cwd(), platform = pr
   throw new CheckError("No validation entry point found. Expected scripts/check.sh or scripts/check.ps1.");
 }
 
-export async function runProjectCheck(rootDir = process.cwd()): Promise<number> {
+export async function runProjectCheck(rootDir = process.cwd(), options: OutputOptions = {}): Promise<number> {
   const root = path.resolve(rootDir);
   const resolved = await resolveCheckCommand(root);
+  const stdout = createStyles(options);
+  const stderr = createStyles({ ...options, stream: process.stderr });
+  console.log(`${stdout.heading("Control Plane Check")}\nRunning ${resolved.script}`);
 
   return await new Promise<number>((resolve, reject) => {
     const child = spawn(resolved.command, resolved.args, {
       cwd: root,
       stdio: "inherit",
-      shell: false
+      shell: false,
+      env: options.noColor ? { ...process.env, NO_COLOR: "1", NODE_DISABLE_COLORS: "1", FORCE_COLOR: undefined } : process.env
     });
 
     child.once("error", (error) => {
@@ -69,7 +74,10 @@ export async function runProjectCheck(rootDir = process.cwd()): Promise<number> 
         reject(new CheckError(`${resolved.script} terminated by signal ${signal}.`));
         return;
       }
-      resolve(code ?? 1);
+      const exitCode = code ?? 1;
+      if (exitCode === 0) console.log(stdout.success("Validation succeeded."));
+      else console.error(stderr.error(`Validation failed (exit code ${exitCode}).`));
+      resolve(exitCode);
     });
   });
 }

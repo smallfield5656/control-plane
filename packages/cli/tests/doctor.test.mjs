@@ -93,3 +93,18 @@ test("doctor reports Ready for Validation only after bootstrap documents, archit
   assert.match(report.nextAction, /scripts\/check\.\*/);
   await rm(root, { recursive: true, force: true });
 });
+
+for (const [content, pending] of [
+  ["TODO", true], ["TODO: define constraints", true], ["- TODO", true],
+  ["| Platform | TODO |", true], ["**TODO**", true],
+  ["TODOList and MY_TODO are identifiers.", false], ["なし。外部接続を利用しないため。", false]
+]) {
+  test(`doctor classifies constraint marker ${JSON.stringify(content)}`, async (t) => {
+    const { root, project } = await fixtureFromTemplate();
+    t.after(() => rm(root, { recursive: true, force: true }));
+    await completeBootstrapDocs(project);
+    await writeFile(path.join(project, "docs/product/constraints.md"), content);
+    const report = await doctorProject(project);
+    assert.equal(report.checks.find((check) => check.label === "Bootstrap content: docs/product/constraints.md").ok, !pending);
+  });
+}

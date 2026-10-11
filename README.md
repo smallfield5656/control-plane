@@ -31,6 +31,8 @@ control-plane --help
 control-plane --version
 ```
 
+端末では状態と見出しを着色し、`--no-color` で無効化できます。出力の詳細は [CLI README](packages/cli/README.md#terminal-output) を参照してください。
+
 役割は次のように分かれます。
 
 ```text

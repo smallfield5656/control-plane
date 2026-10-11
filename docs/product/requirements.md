@@ -38,6 +38,9 @@
 - [ ] Bootstrap Preparation / Architecture Gate Pending / Bootstrap Complete等、Repositoryから安全に判定できる状態を表示する。
 - [ ] 不足項目を人間向けに説明し、次Actionを提示する。
 - [ ] 判定できない状態を推測で確定しない。
+- [ ] 独立した `TODO` / `TODO:` は未完了として検出し、`TODOList` / `MY_TODO` 等の識別子は検出しない。境界はASCII英数字・underscore以外とする。
+- [ ] 新規生成直後の `next` は全5項目を `Pending` とし、Constraintsも `Work On` と依頼文へ含める。
+- [ ] Shell / PowerShellのplaceholder検証も同じ大小文字・境界のルールを使う。
 
 ### REQ-003: Validation execution
 
@@ -166,3 +169,21 @@ CLIは `init / doctor / next / check` と `bootstrap` 互換Aliasに限定し、
 - [ ] CLI自身はIssueを作成せず、Issue番号や変更内容をRepository状態から推測しない。
 - [ ] Bootstrap Complete状態でも `control-plane check` によるValidation導線を維持する。
 - [ ] Workflow本文はCLIへ複製せず、詳細はRepository上のIssue WorkflowをSource of Truthとする。
+
+### REQ-009: Readable terminal output
+
+**Statement**
+
+利用者は、CLIの状態と次Actionを端末で視覚的に識別でき、装飾のない出力も利用できる。
+
+**Acceptance Criteria**
+
+- [ ] `init / doctor / next / bootstrap / check / --help` と引数Errorで共通の意味付けを使う。
+- [ ] 成功・完了は緑、未完了・承認待ちは黄、要確認は黄＋太字、実行失敗・必須asset欠落は赤、見出し・次Stepはシアン＋太字。
+- [ ] 色がなくても状態が理解できる文字・記号を残す。パス、説明、`Suggested Instruction` 本文は装飾しない。
+- [ ] stdout / stderrのTTYを個別に判定し、非TTY、CI、`TERM=dumb` は既定で装飾しない。
+- [ ] `NO_COLOR` / `NODE_DISABLE_COLORS` の非空値、`FORCE_COLOR=0`、全コマンド共通の `--no-color` で無効化する。明示的な非空・非0の `FORCE_COLOR` はTTY / CI制限を上書きできるが、無効化指定を優先する。
+- [ ] `--no-color` は前後どちらでも指定でき、`check` のchild processにも伝達する。
+- [ ] 色の有無で診断結果・案内本文・終了コードを変えない。`--version` は常に番号だけを装飾なしで表示する。
+- [ ] `check` は選択scriptと開始・成功／失敗を表示し、child logは変更せず継承する。
+- [ ] 実行時依存を追加せず、Node.js 22の最低対応版でも動作する。
