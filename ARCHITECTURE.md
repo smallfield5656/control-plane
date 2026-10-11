@@ -8,7 +8,7 @@
 
 `control-plane` は、AI-assisted developmentを制御するRepository contractと、その導入・診断・次Action案内・検証実行を支援するCLIから構成する。
 
-ADR-0001 / ADR-0002のArchitecture Gateを通過し、生成先Templateの正本を `template/` に分離し、CLIをTypeScript / Node.jsで実装する構成を採用した。
+ADR-0001 / ADR-0002 / ADR-0003のArchitecture Gateを通過し、生成先Templateの正本を `template/` に分離し、CLIをTypeScript / Node.jsで実装し、標準Agent SkillsとControl Plane固有Workflowを別pathで管理する構成を採用した。
 
 ## Technology Stack
 
@@ -23,7 +23,8 @@ ADR-0001 / ADR-0002のArchitecture Gateを通過し、生成先Templateの正本
 ### control-plane product repository
 
 - Product / Delivery / Architecture documentation
-- Agent workflows / skills used to develop control-plane itself
+- Standard Agent Skills in `.agents/skills/`
+- Control Plane-specific workflows in `agent/workflows/`
 - `packages/cli/`
 - Product-level validation entry point (`scripts/check.*`)
 
@@ -33,8 +34,9 @@ ADR-0001 / ADR-0002のArchitecture Gateを通過し、生成先Templateの正本
 
 - `AGENTS.md`
 - `ARCHITECTURE.md`
+- `.agents/skills/`
+- `agent/workflows/`
 - `docs/`
-- `agent/`
 - `scripts/`
 - `.github/`
 - examples / placeholder source directories
@@ -60,6 +62,8 @@ ADR-0001 / ADR-0002のArchitecture Gateを通過し、生成先Templateの正本
 
 - `README.md`: 人間向け入口とCLI Quick Start
 - `AGENTS.md`: control-plane自身のAI agent router
+- `.agents/skills/`: 標準Agent Skills。WorkflowやDurable Truthを実行するAdapter
+- `agent/workflows/`: Control Plane固有のProject Workflow
 - `docs/`: control-plane自身のDurable Truth
 - `template/`: 生成先Project assetの正本
 - `packages/cli/src/init.ts`: Template展開
@@ -76,6 +80,8 @@ ADR-0001 / ADR-0002のArchitecture Gateを通過し、生成先Templateの正本
 ```text
 Product / Architecture / Workflow / Validation contract
                          ↓
+             Agent Skills as adapters
+                         ↓
                      template/
                          ↓
           CLI init / doctor / next / check
@@ -84,6 +90,8 @@ Product / Architecture / Workflow / Validation contract
 ```
 
 CLIへTemplate本文、Workflow truth、Validation logicを重複してhard-codeしない。
+
+標準Agent Skillは `.agents/skills/` に置き、Control Plane固有Workflowは `agent/workflows/` に置く。SkillはWorkflowやDurable Truthを複製せず、それらを実行するAdapterとして扱う。
 
 `doctor` は既存Repository contractを読む診断Interfaceであり、Bootstrap WorkflowそのものをCLIへ複製しない。
 
@@ -141,3 +149,4 @@ Core Template contractは特定のHosted serviceやAI vendorを必須としな�
 
 - ADR-0001: `docs/architecture/adr/0001-separate-template-assets.md`
 - ADR-0002: `docs/architecture/adr/0002-cli-implementation-technology.md`
+- ADR-0003: `docs/architecture/adr/0003-standard-agent-skills-path.md`
