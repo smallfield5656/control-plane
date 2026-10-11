@@ -1,8 +1,6 @@
 # Estimate
 
-工数・初期費用・運用費を、前提と不確実性を含めて管理するSSOT。
-
-見積もりはまず **Effort Range + Assumptions + Confidence** で示す。単価が与えられている場合のみCostへ変換し、不明な単価を推測しない。
+Maintenance scopeの工数・費用を管理するSSOT。AI Agent Elapsed、Human Involvement、Human-only Equivalentを区別し、実測・根拠のない数値を作らない。
 
 ## Estimate Date
 
@@ -10,37 +8,23 @@
 
 ## Confidence
 
-Medium
+Low — 今回のpatchについて、経過時間とHuman laborの実測値は収集していない。
 
 ## Assumptions
 
-- Maintainer 1名を基準とする。
-- `init / doctor / check` の初期CLI command implementationは完了済み。
-- CLI technologyは TypeScript / Node.js で確定済み。
-- Repository rootの `template/` をTemplateのSource of Truthとして維持する。
-- v0.1.0までは `bootstrap / status / update` を追加しない。
-- `control-plane.yml`、Project Profile、Plugin system、SubagentsはRelease Readinessに含めない。
-- npm packageとして配布し、Repository cloneなしでGolden Pathを開始できる状態を目標とする。
+- 現在の対象はTemplate配布の完全性とRepository hygieneの修正。
+- CLI commandとWorkflowのScopeは変更しない。
+- npm / GitHub Releaseへの公開は、ReviewとWindows / Linux CIを確認した後に行う。
+- 過去のMVP / Release Readinessは完了済み。過去の見積もりを現在の残工数として扱わない。
 
 ## Delivery Effort
 
-### Completed MVP Effort Baseline
+| Area | AI Agent Elapsed | Human Involvement | Human-only Equivalent | Notes |
+|---|---|---|---|---|
+| Packaging / hygiene implementation | Not measured | Not measured | Not estimated | Regression testとRepository整理 |
+| Review / CI / release | Not estimated | Not estimated | Not estimated | 公開前の残作業 |
 
-初期見積もりは 5.5–12.5 person-days だった。
-
-Product / Architecture、Repository migration、`init / doctor / check`、基本testまでは完了している。ここでは過去実績を再計算せず、残作業だけを再見積もりする。
-
-### Remaining Release Readiness Effort
-
-| Area | Range | Unit | Notes |
-|---|---:|---|---|
-| Package contract | 0.5–1.0 | person-days | package identity、metadata、Node support、pack contents |
-| Template packaging | 0.75–1.5 | person-days | root templateのstaging、installed path解決、Regression test |
-| Packed artifact integration | 0.5–1.0 | person-days | npm pack → install → init/doctor/check |
-| CLI UX baseline | 0.25–0.75 | person-days | help、version、usage/error整理 |
-| Cross-platform CI | 0.5–1.0 | person-days | Windows/Linux、既存checkへ収束 |
-| README / dogfood | 0.5–1.0 | person-days | third-party Quick Start、clean environment確認 |
-| Release / publish | 0.25–0.75 | person-days | version、release notes、npm/GitHub Release |
+AI Agent ElapsedとHuman Involvementは単純合算しない。Human-only Equivalentを算出する場合は、同じScopeと品質条件で前提を明示する。
 
 ## Rate
 
@@ -53,33 +37,21 @@ Not calculated
 ## Running Cost
 
 | Item | Monthly Range | Notes |
-|---|---:|---|
-| Infrastructure | 0 expected | CLIはHosted infrastructureを必要としない |
-| External services | 0 expected | MVPではrequired external APIなし |
-| npm registry | 0 expected for public package | Account / scope policyによる |
-| Operations | Not calculated | Maintainer effortのみ |
+|---|---|---|
+| Infrastructure | No required hosted infrastructure | CLIはlocal filesystemで動作 |
+| AI / External services | Not calculated | 開発時の利用量・契約条件は未集計 |
+| Operations | Not calculated | Maintainer effortの実測なし |
 
 ## Total Estimate
 
-- Remaining effort: **3.25–7.0 person-days**
+- AI Agent Elapsed: Not measured
+- Human Involvement: Not measured
+- Human-only Equivalent: Not estimated
 - Initial Cost: Not calculated
-- Monthly Cost: 0 external infrastructure expected
+- Monthly Cost: Not calculated; required hosted infrastructureなし
 
 ## Main Uncertainty
 
-最大の不確実性は **Template packagingと実際のnpm artifact**。
+Windows / Linuxでのstagingとpacked artifactの動作、公開accountの設定、Review待ち時間。公開済みnpm artifactの確認前にRelease完了とは扱わない。
 
-Source treeでは正常でも、published packageに `template/` が入らない、runtime pathが変わる、Windows/Linuxでprocess/path挙動が異なる可能性がある。そのため最初に `npm pack` したartifactから `init` するVertical Sliceを通す。
-
-## Scenario
-
-- Lean: npm package metadata + Template staging + packed initを最小構成で実装し、CLI frameworkを追加しない。
-- Expected: packed Golden Path + help/version + Windows/Linux CI + README dogfoodまで実施する。
-- High: npm packaging / Windows behavior / publish設定で追加修正が必要になる。
-
-## Change Log
-
-| Date | Previous | Current | Reason |
-|---|---:|---:|---|
-| 2026-10-10 | Not estimated | 5.5–12.5 person-days | CLI MVPの初期Scopeを定義 |
-| 2026-10-11 | 5.5–12.5 person-days initial total | 3.25–7.0 person-days remaining | `init / doctor / check` 完了後、Release Readiness残作業を再見積もり |
+過去の見積もりの変更履歴はGit、完了したRelease Readinessの成果は `docs/plans/completed/cli-mvp-release-readiness.md` を参照する。

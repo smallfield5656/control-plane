@@ -67,13 +67,15 @@ ADR-0001 / ADR-0002 / ADR-0003のArchitecture Gateを通過し、生成先Templa
 - `docs/`: control-plane自身のDurable Truth
 - `template/`: 生成先Project assetの正本
 - `packages/cli/src/init.ts`: Template展開
+- `packages/cli/scripts/stage-template.mjs`: Git管理対象から配布用Templateを生成
 - `packages/cli/src/doctor.ts`: Repository診断
 - `packages/cli/src/bootstrap.ts`: Repository状態からNext Step / Human Gate / Suggested Instructionを導出
 - `packages/cli/src/check.ts`: 既存Validation Entry Pointの選択と実行
 - `packages/cli/src/index.ts`: CLI command routing
 - `scripts/check.*`: control-plane productのValidation Entry Point
 - `scripts/check-project.*`: CLI + Template固有Validation
-- `examples/`: control-plane自身の完成例
+- `template/examples/`: 完成例の唯一の正本
+- `examples/`: 完成例への参照だけを置く入口
 
 ## Dependency Direction
 
@@ -105,7 +107,13 @@ CLIへTemplate本文、Workflow truth、Validation logicを重複してhard-code
 
 ### init
 
-`control-plane init <directory>` は `template/` を読み、既存targetを上書きせず新しいDirectoryへ展開する。
+`build` はroot `template/` のGit管理対象を、working treeの内容で `packages/cli/template/` へstagingする。GitはMaintainerのbuildに必要であり、配布済みCLIの実行には要求しない。未追跡・ignored fileを含めず、Credentialに相当するpathとSymbolic linkを拒否する。
+
+開発時と配布時の `control-plane init <directory>` は同じstaging済みTemplateを読み、既存targetを上書きせず新しいDirectoryへ展開する。root source directoryへのfallbackは持たない。
+
+npmで除外されるroot `.gitignore` はartifact内だけ `gitignore.template` として運び、`init` が `.gitignore` へ復元する。本文の正本は引き続きroot `template/.gitignore` であり、CLIへ埋め込まない。
+
+staging copy、build出力、npm tarballは生成物でありGitへ追跡しない。設計理由はADR-0004を参照する。
 
 ### doctor
 
@@ -150,3 +158,4 @@ Core Template contractは特定のHosted serviceやAI vendorを必須としな�
 - ADR-0001: `docs/architecture/adr/0001-separate-template-assets.md`
 - ADR-0002: `docs/architecture/adr/0002-cli-implementation-technology.md`
 - ADR-0003: `docs/architecture/adr/0003-standard-agent-skills-path.md`
+- ADR-0004: `docs/architecture/adr/0004-tracked-template-distribution.md`

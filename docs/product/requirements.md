@@ -16,6 +16,10 @@
 - [ ] CLI内部にTemplate本文を重複して埋め込まない。
 - [ ] 既存Directoryを破壊的に上書きしない。
 - [ ] 初期化後のProjectが既存Control Plane validation contractを利用できる。
+- [ ] npm配布物から初期化したProjectにも、正本と同じ内容の `.gitignore` が配置される。
+- [ ] 開発時とnpm配布時に、同じstaging済みTemplateを使う。
+- [ ] Templateの未追跡・ignored fileをbuild・配布対象へ含めない。
+- [ ] TemplateへのCredentialに相当するpathとSymbolic linkの混入は、buildを失敗させる。
 
 **Out of Scope**
 
@@ -88,12 +92,12 @@ CLI化に伴うRepository再編で、既存Templateの意味と利用方法を�
 
 **Statement**
 
-v0.1.0の初期CLIは `init / doctor / check` に限定し、必要性が未実証の機能を追加しない。
+CLIは `init / doctor / next / check` と `bootstrap` 互換Aliasに限定し、必要性が未実証の機能を追加しない。
 
 **Acceptance Criteria**
 
-- [ ] `bootstrap / status / update / report / estimate` はv0.1.0のOut of Scopeとする。
-- [ ] `control-plane.yml`、Project Profile、Plugin system、Subagentsは初期MVPの必須要素にしない。
+- [ ] `status / update / report / estimate` は現在のScopeに含めない。
+- [ ] `control-plane.yml`、Project Profile、Plugin system、Subagentsを必須要素にしない。
 
 ### REQ-008: Read-only next-step guidance
 

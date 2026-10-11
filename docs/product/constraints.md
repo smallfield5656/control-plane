@@ -6,18 +6,18 @@
 
 - 初期対象は Windows と Linux。
 - macOS対応を妨げるPlatform依存設計を避ける。
-- CLI technologyは未決定。特定言語・runtimeをConstraintとして先に固定しない。
+- 採用Technologyは `ARCHITECTURE.md` とADRを参照する。採用結果を外部Constraintとして扱わない。
 
 ## Distribution
 
 - 初期CLIは第三者が導入しやすい配布形態を優先する。
-- Single binary、package manager、runtime依存方式をTechnology Decisionで比較する。
+- 配布方式の採用結果は `ARCHITECTURE.md` を参照する。
 - CLIとTemplateは当面同一Repositoryで管理する。
 
 ## Security / Privacy
 
 - 初期MVPはCredentialやSecretを必須としない。
-- `init / doctor / check` は原則local filesystem上で完結する。
+- `init / doctor / next / check` は原則local filesystem上で完結する。
 - 既存Projectを破壊的に変更しない。
 
 ## Network
@@ -50,5 +50,5 @@
 
 ## Project Stage
 
-- 現在は **MVP preparation / Architecture Gate pending**。
-- CLI implementation technologyとRepository restructuringは未承認。
+- 現在は公開済みCLIのMaintenance phase。今回のpatchはTemplate配布の完全性とRepository hygieneを改善する。
+- 未実証の追加機能を先行導入しない。

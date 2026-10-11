@@ -1,4 +1,3 @@
-import { existsSync } from "node:fs";
 import { cp, mkdtemp, readdir, rename, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -8,13 +7,7 @@ export class InitError extends Error {}
 
 export function defaultTemplateDir(): string {
   const here = path.dirname(fileURLToPath(import.meta.url));
-  const repositoryTemplate = path.resolve(here, "../../../template");
-  if (existsSync(repositoryTemplate)) {
-    return repositoryTemplate;
-  }
-
-  const packagedTemplate = path.resolve(here, "../template");
-  return packagedTemplate;
+  return path.resolve(here, "../template");
 }
 
 async function assertTemplate(templateDir: string): Promise<void> {
@@ -51,6 +44,12 @@ export async function initProject(targetDir: string, templateDir = defaultTempla
 
   try {
     await cp(template, stagedProject, { recursive: true, errorOnExist: true, force: false });
+    const transportedGitignore = path.join(stagedProject, "gitignore.template");
+    try {
+      await rename(transportedGitignore, path.join(stagedProject, ".gitignore"));
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
     const entries = await readdir(stagedProject);
     if (entries.length === 0) {
       throw new InitError("Template directory is empty.");

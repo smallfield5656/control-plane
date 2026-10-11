@@ -22,10 +22,10 @@ test("packed package installs and runs the CLI golden path with the bundled temp
   const work = await mkdtemp(path.join(tmpdir(), "control-plane-package-"));
   let tarball;
   try {
-    const packOutput = exec(npm, ["pack", "--silent"], { cwd: packageDir });
+    const packOutput = exec(npm, ["pack", "--silent", "--pack-destination", work], { cwd: packageDir });
     const filename = packOutput.trim().split(/\r?\n/).at(-1);
     assert.ok(filename?.endsWith(".tgz"), `unexpected npm pack output: ${packOutput}`);
-    tarball = path.join(packageDir, filename);
+    tarball = path.join(work, filename);
 
     const consumer = path.join(work, "consumer");
     await mkdir(consumer, { recursive: true });
@@ -41,6 +41,14 @@ test("packed package installs and runs the CLI golden path with the bundled temp
     const generatedReadme = await readFile(path.join(target, "README.md"), "utf8");
     assert.match(generatedReadme, /Control Plane Template/);
     await readFile(path.join(target, "AGENTS.md"), "utf8");
+    const expectedGitignore = await readFile(path.resolve(packageDir, "../../template/.gitignore"), "utf8");
+    assert.equal(await readFile(path.join(target, ".gitignore"), "utf8"), expectedGitignore);
+    await assert.rejects(() => readFile(path.join(target, "gitignore.template")), { code: "ENOENT" });
+    const repoRoot = path.resolve(packageDir, "../..");
+    const assets = exec("git", ["ls-files", "-z", "--", "template/"], { cwd: repoRoot }).split("\0").filter(Boolean);
+    for (const asset of assets) {
+      assert.deepEqual(await readFile(path.join(target, asset.slice("template/".length))), await readFile(path.join(repoRoot, asset)), asset);
+    }
     await readFile(path.join(target, "scripts", process.platform === "win32" ? "check.ps1" : "check.sh"), "utf8");
 
     const doctorOutput = exec(bin, ["doctor", target], { cwd: consumer });
@@ -55,7 +63,8 @@ test("packed package installs and runs the CLI golden path with the bundled temp
     assert.equal(bootstrapAliasOutput, nextOutput);
 
     exec(bin, ["check", target], { cwd: consumer });
-    assert.equal(exec(bin, ["--version"], { cwd: consumer }).trim(), "0.2.1");
+    const packageJson = JSON.parse(await readFile(path.join(packageDir, "package.json"), "utf8"));
+    assert.equal(exec(bin, ["--version"], { cwd: consumer }).trim(), packageJson.version);
     const help = exec(bin, ["--help"], { cwd: consumer });
     assert.match(help, /control-plane init <directory>/);
     assert.match(help, /control-plane next \[directory\]/);

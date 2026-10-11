@@ -19,15 +19,11 @@
 
 ## Current Progress
 
-- `control-plane init / doctor / check` は実装・validation完了しmainへmerge済み。
-- npm packageは `@smallfield5656/control-plane@0.1.0` としてpublic publish済み。
-- CLI bin名は `control-plane`、Node.js support baselineは `>=22`。
-- root `template/` を唯一のSource of Truthとし、`npm pack` 時だけpackage artifactへstagingする。
-- packed tarball Golden PathとGitHub ActionsのUbuntu / Windows validationは成功済み。
-- 公開npm packageをclean GitHub Actions runnerから `--version → init → doctor → check` までdogfoodし成功済み。
-- `v0.1.0` Git tagはrelease対象commit `c46c1c6693f735388a4b30b0033f72aed6a8e8b6` を指す。
-- GitHub Release `control-plane v0.1.0` を公開済み。
-- CLI MVP Release Readinessは完了し、Planは `docs/plans/completed/cli-mvp-release-readiness.md` へ移動する。
+- CLIは `init / doctor / next / check` と `bootstrap` 互換Aliasを提供する。
+- 調査時点のnpm `latest` とGitHub Releaseは `0.2.1`。初期MVPの完了記録は `docs/plans/completed/cli-mvp-release-readiness.md` を参照する。
+- 次のpatch `0.2.2` を準備する。対象はTemplate配布の完全性、ローカルファイル混入防止、Repository hygiene。
+- Local validation、Windows / Linux CI、Review、npm publish、GitHub Release、公開artifactのdogfoodがRelease Gate。公開状態は未完了。
+- Template assetはroot `template/` が唯一の正本。具体的なbuild / distribution境界は `ARCHITECTURE.md`、公開手順は `docs/operations/release.md` を参照する。
 
 ## Rules
 
