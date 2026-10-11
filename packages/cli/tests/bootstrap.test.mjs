@@ -66,7 +66,7 @@ test("bootstrap turns fresh project state into copyable Product Definition guida
   await rm(root, { recursive: true, force: true });
 });
 
-test("bootstrap moves to Delivery Framing after Product Definition is complete", async () => {
+test("bootstrap moves to Delivery Framing and lists only incomplete delivery files", async () => {
   const { root, project } = await fixtureFromTemplate();
   await completeProductDefinition(project);
   const { bootstrapProject, formatBootstrapReport } = await import(moduleUrl);
@@ -77,13 +77,12 @@ test("bootstrap moves to Delivery Framing after Product Definition is complete",
   assert.equal(report.nextStep, "Delivery Framing");
   assert.deepEqual(report.workOn, [
     "docs/delivery/charter.md",
-    "docs/delivery/estimate.md",
-    "docs/delivery/risks.md",
-    "docs/delivery/milestones.md"
+    "docs/delivery/estimate.md"
   ]);
   assert.match(output, /Suggested Instruction:/);
   assert.match(output, /docs\/delivery\/charter\.md/);
-  assert.match(output, /docs\/delivery\/milestones\.md/);
+  assert.match(output, /docs\/delivery\/estimate\.md/);
+  assert.doesNotMatch(output, /docs\/delivery\/risks\.md と docs\/delivery\/milestones\.md/);
   assert.match(output, /ArchitectureやTechnologyの選定にはまだ進まないでください/);
   await rm(root, { recursive: true, force: true });
 });
