@@ -57,6 +57,17 @@ Architecture Gateが必要な場合は、Proposed ADRをHuman Gateとして提�
 
 Bootstrap完了後は、変更要求をGitHub Issueとして受け付けるための `Suggested Instruction` を表示します。詳細な通常開発フローは生成Projectの `agent/workflows/issue.md` がSource of Truthです。
 
+## Agent Assets
+
+標準的なAgent Skillsは `.agents/skills/` に配置します。Control Plane固有のProject Workflowは `agent/workflows/` に分離します。
+
+```text
+.agents/skills/       = reusable Agent Skills
+agent/workflows/      = Control Plane-specific workflows
+```
+
+SkillはWorkflowやDurable Truthを複製せず、それらを実行するためのAdapterとして扱います。
+
 ## Durable Truth
 
 Generated Projectでは次の境界を維持します。
@@ -110,8 +121,11 @@ control-plane/
 ├── README.md
 ├── AGENTS.md
 ├── ARCHITECTURE.md
+├── .agents/
+│   └── skills/           # standard Agent Skills
+├── agent/
+│   └── workflows/        # Control Plane-specific workflows
 ├── docs/                 # control-plane自身のSSOT
-├── agent/                # control-plane自身のWorkflow / Skill
 ├── scripts/              # product validation
 ├── packages/
 │   └── cli/              # npm package / TypeScript CLI
@@ -127,6 +141,7 @@ control-plane/
 - ADR: `docs/architecture/adr/`
 - Testing: `docs/testing/strategy.md`
 - Development / Review / Security / CI: `docs/operations/development.md`
+- Agent Skills: `.agents/skills/`
 - Bootstrap workflow: `agent/workflows/bootstrap.md`
 - Generated project template: `template/`
 

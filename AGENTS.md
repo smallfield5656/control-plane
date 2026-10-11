@@ -13,8 +13,11 @@
 - 設計判断の理由: `docs/architecture/adr/`
 - テスト方針: `docs/testing/strategy.md`
 - 開発・Review・Security Gate・CI方針: `docs/operations/development.md`
+- Agent Skills: `.agents/skills/`
 - Bootstrap: `agent/workflows/bootstrap.md`
 - Issue intake: `agent/workflows/issue.md`
+
+標準Agent Skillは `.agents/skills/` に置き、Control Plane固有のProject Workflowは `agent/workflows/` に置く。SkillはWorkflowやDurable Truthを複製せず、それらを実行するためのAdapterとして扱う。
 
 ## Core Rule: SSOT
 
