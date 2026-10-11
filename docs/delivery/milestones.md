@@ -20,8 +20,8 @@
 ## Current Progress
 
 - CLIは `init / doctor / next / check` と `bootstrap` 互換Aliasを提供する。
-- 調査時点のnpm `latest` とGitHub Releaseは `0.2.1`。初期MVPの完了記録は `docs/plans/completed/cli-mvp-release-readiness.md` を参照する。
-- 次のpatch `0.2.2` を準備する。対象はTemplate配布の完全性、ローカルファイル混入防止、Repository hygiene。
+- 確認時点のnpm `latest` とGitHub Releaseは `0.2.2`。初期MVPの完了記録は `docs/plans/completed/cli-mvp-release-readiness.md` を参照する。
+- 次のpatch `0.2.3` を準備する。対象は独立したplaceholderの検出修正、全CLI commandの端末表示改善、共通の色無効化指定。
 - Local validation、Windows / Linux CI、Review、npm publish、GitHub Release、公開artifactのdogfoodがRelease Gate。公開状態は未完了。
 - Template assetはroot `template/` が唯一の正本。具体的なbuild / distribution境界は `ARCHITECTURE.md`、公開手順は `docs/operations/release.md` を参照する。
 

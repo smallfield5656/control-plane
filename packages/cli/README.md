@@ -36,3 +36,19 @@ control-plane --version
 ```
 
 Template / Workflow / Validation contractがDurable Truthであり、CLIはそれらを操作する薄いInterfaceです。
+
+## Terminal Output
+
+成功は緑、未完了・承認待ちは黄、エラーは赤、見出しと次の作業はシアンで表示します。文字と記号でも状態を識別できます。
+
+TTYを自動判定し、パイプ・ファイル保存・CIでは既定で色を付けません。`NO_COLOR=1` または `--no-color` で無効化できます。
+
+```bash
+control-plane next --no-color
+control-plane --no-color doctor
+control-plane check --no-color
+```
+
+`--no-color` は検証の子プロセスにも伝わります。`FORCE_COLOR=1` は明示的な着色に使えますが、無効化指定を優先します。`--version` とコピー用の依頼文は常に装飾しません。
+
+独立した `TODO` / `TODO:` が文書に残っている項目は未完了として扱います。制約がない場合は `なし` と理由を記載してください。既存Projectの検証scriptはCLI更新では自動更新されません。

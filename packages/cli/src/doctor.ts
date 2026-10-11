@@ -1,5 +1,6 @@
 import { access, readdir, readFile } from "node:fs/promises";
 import path from "node:path";
+import { plainStyles, type OutputStyles } from "./output.js";
 
 export type DoctorStatus =
   | "Setup Incomplete"
@@ -65,7 +66,7 @@ async function readText(root: string, relative: string): Promise<string | undefi
 }
 
 function hasBootstrapPlaceholder(relative: string, content: string): boolean {
-  if (content.includes("TODO:")) {
+  if (/(^|[^A-Za-z0-9_])TODO([^A-Za-z0-9_]|$)/.test(content)) {
     return true;
   }
 
@@ -231,12 +232,13 @@ export async function doctorProject(rootDir = process.cwd()): Promise<DoctorRepo
   };
 }
 
-export function formatDoctorReport(report: DoctorReport): string {
-  const lines = ["Control Plane Doctor", ""];
+export function formatDoctorReport(report: DoctorReport, styles: OutputStyles = plainStyles): string {
+  const lines = [styles.heading("Control Plane Doctor"), ""];
   for (const check of report.checks) {
-    const marker = check.ok ? "✓" : "⚠";
+    const missing = check.detail === "missing" || check.label === "Validation entry point";
+    const marker = check.ok ? styles.success("✓") : missing ? styles.error("✗") : styles.warning("⚠");
     lines.push(`${marker} ${check.label}${check.detail ? ` — ${check.detail}` : ""}`);
   }
-  lines.push("", `Status: ${report.status}`, `Next: ${report.nextAction}`);
+  lines.push("", `Status: ${styles.status(report.status)}`, `${styles.heading("Next:")} ${report.nextAction}`);
   return lines.join("\n");
 }

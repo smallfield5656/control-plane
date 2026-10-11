@@ -109,7 +109,7 @@ if ($firstReadmeLine -ne "# control-plane") {
     $matches = @()
     foreach ($path in $placeholderPaths) {
         if (Test-Path $path) {
-            $matches += Get-ChildItem $path -Recurse -File -Filter "*.md" | Select-String -Pattern 'TODO:'
+            $matches += Get-ChildItem $path -Recurse -File -Filter "*.md" | Select-String -CaseSensitive -Pattern '(^|[^A-Za-z0-9_])TODO([^A-Za-z0-9_]|$)'
         }
     }
     if ($matches.Count -gt 0) {

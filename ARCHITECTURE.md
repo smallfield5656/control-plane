@@ -72,6 +72,7 @@ ADR-0001 / ADR-0002 / ADR-0003のArchitecture Gateを通過し、生成先Templa
 - `packages/cli/src/bootstrap.ts`: Repository状態からNext Step / Human Gate / Suggested Instructionを導出
 - `packages/cli/src/check.ts`: 既存Validation Entry Pointの選択と実行
 - `packages/cli/src/index.ts`: CLI command routing
+- `packages/cli/src/output.ts`: 共通の色・TTY / environment判定。Node.js標準APIだけを使い、診断・Workflow logicから分離する。
 - `scripts/check.*`: control-plane productのValidation Entry Point
 - `scripts/check-project.*`: CLI + Template固有Validation
 - `template/examples/`: 完成例の唯一の正本

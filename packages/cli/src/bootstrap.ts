@@ -1,5 +1,6 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
+import { plainStyles, type OutputStyles } from "./output.js";
 import { doctorProject, type DoctorReport } from "./doctor.js";
 
 export type BootstrapPhase =
@@ -256,27 +257,27 @@ export async function bootstrapProject(rootDir = process.cwd()): Promise<Bootstr
   };
 }
 
-export function formatBootstrapReport(report: BootstrapReport): string {
-  const lines = ["Control Plane Bootstrap", "", `Phase: ${report.phase}`, "", "Current State:"];
+export function formatBootstrapReport(report: BootstrapReport, styles: OutputStyles = plainStyles, title = "Control Plane Bootstrap"): string {
+  const lines = [styles.heading(title), "", `Phase: ${styles.status(report.phase)}`, "", styles.heading("Current State:")];
   for (const item of report.state) {
-    lines.push(`  ${item.label.padEnd(18)} ${item.status}`);
+    lines.push(`  ${item.label.padEnd(18)} ${styles.status(item.status)}`);
   }
 
-  lines.push("", `Architecture Gate: ${report.architectureGate}`);
+  lines.push("", `Architecture Gate: ${styles.status(report.architectureGate)}`);
 
   if (report.humanGate && report.humanGate.adrs.length > 0) {
-    lines.push("", "Review Inputs:");
+    lines.push("", styles.heading("Review Inputs:"));
     for (const input of report.reviewInputs) {
       lines.push(`  ${input}`);
     }
   }
 
-  lines.push("", "Human Gate:");
+  lines.push("", styles.heading("Human Gate:"));
   if (report.humanGate && report.humanGate.adrs.length > 0) {
     for (const adr of report.humanGate.adrs) {
       lines.push(`  ${adr.title}`);
     }
-    lines.push("", "Decision:");
+    lines.push("", styles.heading("Decision:"));
     for (const adr of report.humanGate.adrs) {
       lines.push(`  ${adr.file}`);
     }
@@ -284,30 +285,30 @@ export function formatBootstrapReport(report: BootstrapReport): string {
     lines.push("  None");
   }
 
-  lines.push("", "Next Step:", `  ${report.nextStep}`);
+  lines.push("", styles.heading("Next Step:"), `  ${styles.heading(report.nextStep)}`);
 
   if (report.changeIntake) {
-    lines.push("", "Change Intake:", `  ${report.changeIntake}`);
+    lines.push("", styles.heading("Change Intake:"), `  ${report.changeIntake}`);
   }
 
   if (report.workOn.length > 0) {
-    lines.push("", "Work On:");
+    lines.push("", styles.heading("Work On:"));
     for (const file of report.workOn) {
       lines.push(`  ${file}`);
     }
   }
 
   if (report.goal) {
-    lines.push("", "Goal:", `  ${report.goal}`);
+    lines.push("", styles.heading("Goal:"), `  ${report.goal}`);
   }
 
   if (report.suggestedInstruction) {
-    lines.push("", "Suggested Instruction:");
+    lines.push("", styles.heading("Suggested Instruction:"));
     for (const line of report.suggestedInstruction.split("\n")) {
       lines.push(`  ${line}`);
     }
   }
 
-  lines.push("", "Next Action:", `  ${report.nextAction}`);
+  lines.push("", styles.heading("Next Action:"), `  ${report.nextAction}`);
   return lines.join("\n");
 }

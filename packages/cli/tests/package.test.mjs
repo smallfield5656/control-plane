@@ -58,6 +58,11 @@ test("packed package installs and runs the CLI golden path with the bundled temp
     assert.match(nextOutput, /Control Plane Next/);
     assert.match(nextOutput, /Phase: Bootstrap In Progress/);
     assert.match(nextOutput, /Next Action:/);
+    for (const label of ["Product Goal", "Requirements", "Constraints", "Delivery", "Architecture"]) {
+      assert.match(nextOutput, new RegExp(`${label} +Pending`));
+    }
+    assert.match(nextOutput, /docs\/product\/constraints\.md/);
+    assert.doesNotMatch(nextOutput, /\u001b\[/);
 
     const bootstrapAliasOutput = exec(bin, ["bootstrap", target], { cwd: consumer });
     assert.equal(bootstrapAliasOutput, nextOutput);

@@ -53,13 +53,14 @@ test("bootstrap turns fresh project state into copyable Product Definition guida
 
   assert.equal(report.phase, "Bootstrap In Progress");
   assert.equal(report.nextStep, "Product Definition");
-  assert.deepEqual(report.workOn, ["docs/product/overview.md", "docs/product/requirements.md"]);
+  assert.deepEqual(report.workOn, ["docs/product/overview.md", "docs/product/requirements.md", "docs/product/constraints.md"]);
+  assert.deepEqual(report.state.map((item) => item.status), Array(5).fill("Pending"));
   assert.match(output, /Next Step:\s+Product Definition/);
   assert.match(output, /Work On:\s+docs\/product\/overview\.md\s+docs\/product\/requirements\.md/);
   assert.match(output, /Goal:/);
   assert.match(output, /Product Goalと主要Requirements \/ Acceptance Criteria/);
   assert.match(output, /Suggested Instruction:/);
-  assert.match(output, /docs\/product\/overview\.md と docs\/product\/requirements\.md を更新してください/);
+  assert.match(output, /docs\/product\/overview\.md と docs\/product\/requirements\.md と docs\/product\/constraints\.md を更新してください/);
   assert.doesNotMatch(output, /上記ファイル/);
   assert.match(output, /ArchitectureやTechnologyの選定には進まないでください/);
   assert.match(output, /Human Gate:\s+None/);
@@ -77,12 +78,14 @@ test("bootstrap moves to Delivery Framing and lists only incomplete delivery fil
   assert.equal(report.nextStep, "Delivery Framing");
   assert.deepEqual(report.workOn, [
     "docs/delivery/charter.md",
-    "docs/delivery/estimate.md"
+    "docs/delivery/estimate.md",
+    "docs/delivery/risks.md",
+    "docs/delivery/milestones.md"
   ]);
   assert.match(output, /Suggested Instruction:/);
   assert.match(output, /docs\/delivery\/charter\.md/);
   assert.match(output, /docs\/delivery\/estimate\.md/);
-  assert.doesNotMatch(output, /docs\/delivery\/risks\.md と docs\/delivery\/milestones\.md/);
+  assert.match(output, /docs\/delivery\/risks\.md と docs\/delivery\/milestones\.md/);
   assert.match(output, /ArchitectureやTechnologyの選定にはまだ進まないでください/);
   await rm(root, { recursive: true, force: true });
 });

@@ -98,7 +98,7 @@ if [[ "$(head -n 1 README.md 2>/dev/null || true)" != "# control-plane" ]]; then
     "docs/product"
     "docs/delivery"
   )
-  if grep -RIn --include='*.md' 'TODO:' "${placeholder_paths[@]}"; then
+  if grep -RInE --include='*.md' '(^|[^A-Za-z0-9_])TODO([^A-Za-z0-9_]|$)' "${placeholder_paths[@]}"; then
     echo "Bootstrap placeholders remain in project documentation." >&2
     exit 1
   fi

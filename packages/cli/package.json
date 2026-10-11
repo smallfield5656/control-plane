@@ -1,6 +1,6 @@
 {
   "name": "@smallfield5656/control-plane",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "A lightweight engineering control plane for AI-assisted software projects.",
   "type": "module",
   "bin": {
@@ -38,7 +38,7 @@
     "clean-template": "node scripts/clean-template.mjs",
     "prepack": "npm run build",
     "postpack": "npm run clean-template",
-    "test": "npm run build && node --test tests/init.test.mjs tests/doctor.test.mjs tests/bootstrap.test.mjs tests/check.test.mjs tests/stage-template.test.mjs tests/package.test.mjs"
+    "test": "npm run build && node --test tests/init.test.mjs tests/doctor.test.mjs tests/bootstrap.test.mjs tests/check.test.mjs tests/output.test.mjs tests/validation.test.mjs tests/stage-template.test.mjs tests/package.test.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
