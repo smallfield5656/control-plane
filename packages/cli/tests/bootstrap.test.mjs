@@ -9,6 +9,16 @@ const packageDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".
 const repoRoot = path.resolve(packageDir, "../..");
 const moduleUrl = pathToFileURL(path.join(packageDir, "dist/bootstrap.js")).href;
 
+const reviewInputs = [
+  "docs/product/overview.md",
+  "docs/product/requirements.md",
+  "docs/product/constraints.md",
+  "docs/delivery/charter.md",
+  "docs/delivery/estimate.md",
+  "docs/delivery/risks.md",
+  "docs/delivery/milestones.md"
+];
+
 async function fixtureFromTemplate() {
   const root = await mkdtemp(path.join(tmpdir(), "control-plane-bootstrap-"));
   const project = path.join(root, "project");
@@ -42,7 +52,7 @@ test("bootstrap reports fresh template progress with Japanese guidance", async (
   await rm(root, { recursive: true, force: true });
 });
 
-test("bootstrap exposes Proposed ADRs as a human Architecture Gate", async () => {
+test("bootstrap exposes review inputs and a Proposed ADR as a decision-oriented human gate", async () => {
   const { root, project } = await fixtureFromTemplate();
   await completeBootstrapDocs(project);
   await writeFile(
@@ -55,10 +65,18 @@ test("bootstrap exposes Proposed ADRs as a human Architecture Gate", async () =>
   const output = formatBootstrapReport(report);
 
   assert.equal(report.phase, "Architecture Gate Pending");
+  assert.deepEqual(report.reviewInputs, reviewInputs);
   assert.deepEqual(report.humanGate?.adrs.map((adr) => adr.title), ["ADR-0001: React + IndexedDBを採用する"]);
+  assert.deepEqual(report.humanGate?.adrs.map((adr) => adr.file), ["docs/architecture/adr/0001-runtime.md"]);
   assert.match(output, /Architecture Gate:\s+Pending/);
+  assert.match(output, /Review Inputs:/);
+  for (const reviewInput of reviewInputs) {
+    assert.match(output, new RegExp(reviewInput.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  }
   assert.match(output, /Human Gate:/);
   assert.match(output, /ADR-0001: React \+ IndexedDBを採用する/);
+  assert.match(output, /Decision:/);
+  assert.match(output, /docs\/architecture\/adr\/0001-runtime\.md/);
   assert.match(output, /承認または却下してください/);
   await rm(root, { recursive: true, force: true });
 });
