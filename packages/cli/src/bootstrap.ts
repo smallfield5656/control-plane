@@ -18,7 +18,7 @@ export type BootstrapNextStep =
   | "Architecture Gate"
   | "Needs Review"
   | "Bootstrap Finalization"
-  | "Complete";
+  | "Ongoing Development";
 
 const PRODUCT_FILES = [
   "docs/product/overview.md",
@@ -58,6 +58,7 @@ export interface BootstrapReport {
   reviewInputs: string[];
   humanGate?: BootstrapHumanGate;
   nextStep: BootstrapNextStep;
+  changeIntake?: "GitHub Issue";
   workOn: string[];
   goal?: string;
   suggestedInstruction?: string;
@@ -139,7 +140,7 @@ function formatFileList(files: string[]): string {
   return files.join(" と ");
 }
 
-function guidance(report: DoctorReport, phase: BootstrapPhase): Pick<BootstrapReport, "nextStep" | "workOn" | "goal" | "suggestedInstruction"> {
+function guidance(report: DoctorReport, phase: BootstrapPhase): Pick<BootstrapReport, "nextStep" | "changeIntake" | "workOn" | "goal" | "suggestedInstruction"> {
   if (phase === "Setup Incomplete") {
     return { nextStep: "Setup Recovery", workOn: [] };
   }
@@ -150,7 +151,18 @@ function guidance(report: DoctorReport, phase: BootstrapPhase): Pick<BootstrapRe
     return { nextStep: "Needs Review", workOn: ["ARCHITECTURE.md", "docs/architecture/adr/"] };
   }
   if (phase === "Bootstrap Complete") {
-    return { nextStep: "Complete", workOn: [] };
+    return {
+      nextStep: "Ongoing Development",
+      changeIntake: "GitHub Issue",
+      workOn: [],
+      goal: "変更要求をGitHub Issueとして受け付け、Issue Workflowに従って影響分析から実装まで進めてください。",
+      suggestedInstruction:
+        "AGENTS.md と agent/workflows/issue.md を読んでください。\n" +
+        "次の変更要求についてGitHub Issueを作成してください。\n" +
+        "変更内容: <ここに変更したい内容を書く>\n" +
+        "Issue作成後、Requirements / Constraints / Architecture / Cost / Risk / Timelineへの影響を分析し、必要なCurrent Truthを更新してください。\n" +
+        "Architecture Decisionの変更が必要な場合は、新しいADRをProposedとして作成し、実装せずHuman Gateで停止してください。"
+    };
   }
 
   const pendingProduct = PRODUCT_FILES.filter((relative) => !bootstrapDocOk(report, relative));
@@ -213,7 +225,7 @@ function nextAction(phase: BootstrapPhase, proposed: BootstrapAdr[], nextStep: B
     return "Proposed ADRとARCHITECTURE.mdの状態を確認してください。CLIは曖昧な状態を推測で確定しません。";
   }
   if (phase === "Bootstrap Complete") {
-    return "Bootstrapは完了しています。control-plane check でProject全体をValidationしてください。";
+    return "変更要求がある場合はSuggested Instructionの <ここに変更したい内容を書く> を置き換えてAI Agentへ渡してください。現在のProjectを検証する場合は control-plane check を実行してください。";
   }
   return `${nextStep} を進めてください。`;
 }
@@ -273,6 +285,10 @@ export function formatBootstrapReport(report: BootstrapReport): string {
   }
 
   lines.push("", "Next Step:", `  ${report.nextStep}`);
+
+  if (report.changeIntake) {
+    lines.push("", "Change Intake:", `  ${report.changeIntake}`);
+  }
 
   if (report.workOn.length > 0) {
     lines.push("", "Work On:");
