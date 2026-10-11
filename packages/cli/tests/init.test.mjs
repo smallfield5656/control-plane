@@ -55,10 +55,20 @@ test("repository template contains the generated project contract", async () => 
     "docs/product/overview.md",
     "docs/product/requirements.md",
     "docs/product/constraints.md",
+    "docs/delivery/estimate.md",
     "agent/workflows/bootstrap.md",
     "scripts/check.sh",
     "scripts/check.ps1"
   ]) {
     assert.ok((await readFile(path.join(template, relative), "utf8")).length >= 0, relative);
   }
+});
+
+test("estimate template separates AI elapsed time, human involvement, and human-only baseline", async () => {
+  const estimate = await readFile(path.join(repoRoot, "template/docs/delivery/estimate.md"), "utf8");
+
+  assert.match(estimate, /AI Agent Elapsed/);
+  assert.match(estimate, /Human Involvement/);
+  assert.match(estimate, /Human-only Equivalent/);
+  assert.match(estimate, /単純合算しない/);
 });
