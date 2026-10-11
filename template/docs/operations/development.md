@@ -99,3 +99,14 @@ CI ────┘
 ```
 
 Runtime、dependency、browser、OS package等のsetupはProject固有で構成する。CI workflowへtest / lint / buildの実行知識を重複させず、setup後の最終検証は `scripts/check.*` に委譲する。
+
+## Repository Hygiene / Public Data
+
+Gitで追跡するのはSource、合意されたDocumentation、公開用の設定・Sample。Build output、packagingのstaging copy、ログ、Test report、実Credential、非公開の業務Dataは公開しない。
+
+- `.env.example` や共有設定を置く場合、実Secretを含めず、必要なら環境変数の参照だけを記載する。
+- `.npmrc` と証明書は既定で除外する。Secretを含まない共有設定・公開証明書が必要な場合だけ、対象fileをReviewして明示的に管理する。
+- 外部Issue、添付画像、DB dump、AI session履歴は、個人情報・顧客情報・内部情報を確認してから扱う。
+- `.gitignore` は既に追跡されたfileやGit履歴を消さない。漏えいしたCredentialは先に失効・再発行し、必要なら履歴の除去を別作業として検討する。
+- CommitのAuthor / Committer emailも公開される。個人emailを公開しない場合はGitHubの `noreply` をローカルGitに設定する。
+- Public repositoryではGitHub Secret scanning / Push protectionの有効化状況を確認する。file名の除外やReviewだけをSecret検出の保証にしない。

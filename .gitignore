@@ -8,11 +8,23 @@ dist/
 build/
 target/
 coverage/
+/packages/cli/template/
+/packages/cli/*.tgz
+playwright-report/
+test-results/
 
 # Environment / secrets
 .env
 .env.*
 !.env.example
+.npmrc
+auth.json
+.aws/credentials
+.codex/auth.json
+*.key
+*.pem
+*.p12
+*.pfx
 
 # Editor / OS
 .vscode/
@@ -24,3 +36,4 @@ Thumbs.db
 *.log
 tmp/
 temp/
+.control-plane-init-*/

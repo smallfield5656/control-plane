@@ -92,7 +92,7 @@ control-plane自身を開発する場合:
 ```bash
 git clone https://github.com/smallfield5656/control-plane.git
 cd control-plane
-npm --prefix packages/cli install
+npm --prefix packages/cli ci
 bash scripts/check.sh
 ```
 
@@ -112,7 +112,11 @@ cd packages/cli
 npm pack
 ```
 
-`prepack` 時にroot `template/` をpackage artifactへstagingし、`postpack` でstaging copyを削除します。root `template/` だけがSource of Truthです。
+`build` 時にroot `template/` のGit管理対象だけをpackage artifactへstagingします。新しいTemplate assetは `git add template/<path>` してからbuildしてください。既存assetはworking treeの変更内容を使います。
+
+開発時と配布時のCLIは同じstaging済みTemplateを読みます。`postpack` はstaging copyを削除するため、pack後にsource treeから `init` する場合は再buildしてください。root `template/` だけがSource of Truthです。
+
+公開・version・GitHub Releaseの手順は [Release](docs/operations/release.md) を参照してください。
 
 ## Repository Structure
 
@@ -130,7 +134,7 @@ control-plane/
 ├── packages/
 │   └── cli/              # npm package / TypeScript CLI
 ├── template/             # 生成先Project assetの唯一の正本
-└── examples/
+└── examples/             # template/examples/ への入口
 ```
 
 ## Sources of Truth
