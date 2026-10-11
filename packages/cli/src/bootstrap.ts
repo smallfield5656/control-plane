@@ -11,6 +11,16 @@ export type BootstrapPhase =
 
 export type BootstrapItemStatus = "Complete" | "Pending" | "Needs Review";
 
+const REVIEW_INPUTS = [
+  "docs/product/overview.md",
+  "docs/product/requirements.md",
+  "docs/product/constraints.md",
+  "docs/delivery/charter.md",
+  "docs/delivery/estimate.md",
+  "docs/delivery/risks.md",
+  "docs/delivery/milestones.md"
+] as const;
+
 export interface BootstrapStateItem {
   label: "Product Goal" | "Requirements" | "Constraints" | "Delivery" | "Architecture";
   status: BootstrapItemStatus;
@@ -31,6 +41,7 @@ export interface BootstrapReport {
   phase: BootstrapPhase;
   state: BootstrapStateItem[];
   architectureGate: "Pending" | "None";
+  reviewInputs: string[];
   humanGate?: BootstrapHumanGate;
   nextAction: string;
   hasErrors: boolean;
@@ -133,16 +144,7 @@ function nextAction(report: DoctorReport, phase: BootstrapPhase, proposed: Boots
     return "Bootstrapは完了しています。control-plane check でProject全体をValidationしてください。";
   }
 
-  const docsComplete = [
-    "docs/product/overview.md",
-    "docs/product/requirements.md",
-    "docs/product/constraints.md",
-    "docs/delivery/charter.md",
-    "docs/delivery/estimate.md",
-    "docs/delivery/risks.md",
-    "docs/delivery/milestones.md"
-  ].every((relative) => bootstrapDocOk(report, relative));
-
+  const docsComplete = REVIEW_INPUTS.every((relative) => bootstrapDocOk(report, relative));
   if (!docsComplete) {
     return "agent/workflows/bootstrap.md に従い、Product Goal / Requirements / Constraints / Deliveryを整理してください。";
   }
@@ -163,6 +165,7 @@ export async function bootstrapProject(rootDir = process.cwd()): Promise<Bootstr
     phase,
     state: productState(report),
     architectureGate,
+    reviewInputs: [...REVIEW_INPUTS],
     humanGate:
       architectureGate === "Pending"
         ? { type: "Architecture Gate", adrs: proposed }
@@ -178,10 +181,23 @@ export function formatBootstrapReport(report: BootstrapReport): string {
     lines.push(`  ${item.label.padEnd(18)} ${item.status}`);
   }
 
-  lines.push("", `Architecture Gate: ${report.architectureGate}`, "", "Human Gate:");
+  lines.push("", `Architecture Gate: ${report.architectureGate}`);
+
+  if (report.humanGate && report.humanGate.adrs.length > 0) {
+    lines.push("", "Review Inputs:");
+    for (const input of report.reviewInputs) {
+      lines.push(`  ${input}`);
+    }
+  }
+
+  lines.push("", "Human Gate:");
   if (report.humanGate && report.humanGate.adrs.length > 0) {
     for (const adr of report.humanGate.adrs) {
       lines.push(`  ${adr.title}`);
+    }
+    lines.push("", "Decision:");
+    for (const adr of report.humanGate.adrs) {
+      lines.push(`  ${adr.file}`);
     }
   } else {
     lines.push("  None");
