@@ -16,13 +16,28 @@ package versionの正本は `packages/cli/package.json`。lockfileは同じversi
 
 ## Publish
 
-`packages/cli/` で公開先accountを `npm whoami` により確認し、`npm publish --access public` を実行する。TokenをRepositoryやTemplateへ保存しない。
+公開はnpmのStaged Packagesを使い、uploadと人間による公開承認を分離する。`npm stage` にはNode.js 22.14.0以上、npm CLI 11.15.0以上が必要。
 
-npmの公開処理には待ち時間がある。`previously staged version` / E409や直後のE404が出た場合は、同じversionを再送信・変更せず、`npm view <package>@<version> version` で公開状態を確認する。
+`packages/cli/` で公開先accountを `npm whoami` により確認し、cleanなrelease commitから次を実行する。TokenをRepositoryやTemplateへ保存しない。
+
+```bash
+npm stage publish --access public
+```
+
+表示されたstage IDに対して `npm stage view <stage-id>` と `npm stage download <stage-id>` を実行し、package name、version、tag、access、収録file、shasumをReviewする。承認者はnpmjs.comのStaged Packagesで同じstageを確認し、2FAを使ってApproveする。OTPはIssue、Repository、Agentの会話へ記録しない。
+
+npmの検証・公開処理には待ち時間がある。stageが一覧から消えた場合や、`previously staged version` / E409、公開直後のE404が出た場合は、同じversionを再送信・変更せず、`npm view <package>@<version> version dist.shasum dist.integrity` と `npm view <package> dist-tags` で公開状態を確認する。公開後の `dist.shasum` はReviewしたstageのshasumと一致しなければならない。
 
 Release notesは `docs/releases/v<version>.md` に保存し、短い英語の概要、`Highlights:`、必要なら `Migration:` を記載する。
 
 同じcommitへpackage versionに対応する `v<version>` tagを付け、GitHub Releaseを作成する。Release notesには利用者への変更と必要なMigrationを記載する。npm tarballはRepositoryへcommitせず、必要ならRelease assetとして配布する。
+
+通常のnpm publishでmetadataに `gitHead` がある場合はtag対象commitとの一致を確認する。Staged Packages経由では `gitHead` が付かないことがあるため、その場合は次の連鎖をRelease Gateの証跡とする。
+
+1. working treeがcleanなrelease commitからstageしたこと
+2. downloadしたstageのshasumが `npm stage view` のshasumと一致すること
+3. 公開後の `dist.shasum` がstageのshasumと一致すること
+4. Git tagとGitHub Releaseが同じrelease commitを指すこと
 
 ## Verify Published Artifact
 
@@ -32,9 +47,9 @@ Release notesは `docs/releases/v<version>.md` に保存し、短い英語の概
 
 公開成功を確認してから `docs/delivery/milestones.md` の公開状態を更新する。公開準備と公開完了を混同しない。
 
-## v0.2.3 Local Publication
+## Staged Publication Commands
 
-変更を取り込んだRepository rootから実行する。Windows / LinuxとNode.js最低対応版のCIが成功し、working treeがcleanであることを先に確認する。
+変更を取り込んだRepository rootから実行する。Windows / LinuxとNode.js最低対応版のCIが成功し、working treeがcleanであることを先に確認する。環境のnpmが11.15.0未満なら、system npmを置換せず `npx --yes npm@<supported-version> stage ...` で対応版を一時実行できる。
 
 ```bash
 git switch main
@@ -43,43 +58,44 @@ npm --prefix packages/cli ci
 bash scripts/check.sh
 cd packages/cli
 npm whoami
-npm publish --access public
+npm stage publish --access public
+npm stage list @smallfield5656/control-plane
+stage_id="replace-with-stage-id"
+npm stage view "$stage_id"
+npm stage download "$stage_id"
 ```
 
-`npm whoami` で未ログインなら `npm login` を実行する。公開後は次を繰り返して `0.2.3` の取得が可能になるまで待つ。公開済みversionを再公開しない。
+承認者がnpmjs.comのStaged PackagesでApproveした後、対象versionの取得が可能になるまで次を確認する。公開済みversionを再公開しない。
 
 ```bash
-npm view @smallfield5656/control-plane@0.2.3 version
+release_version="0.3.0"
+npm view "@smallfield5656/control-plane@$release_version" version dist.shasum dist.integrity
 npm view @smallfield5656/control-plane dist-tags
 ```
 
-同じターミナルでnpmのgitHeadと現在のcommitの一致を確認してからGitHub Releaseを公開する。`gh auth status` が失敗した場合は `gh auth login --web` で認証する。
+stageと公開物のshasumが一致することを確認してからGitHub Releaseを公開する。`gh auth status` が失敗した場合は `gh auth login --web` で認証する。
 
 ```bash
+release_version="0.3.0"
 release_commit=$(git rev-parse HEAD)
-package_commit=$(npm view @smallfield5656/control-plane@0.2.3 gitHead)
-if [ "$package_commit" = "$release_commit" ]; then
-  gh release create v0.2.3 \
-    --repo smallfield5656/control-plane \
-    --target "$release_commit" \
-    --title "v0.2.3" \
-    --notes-file ../../docs/releases/v0.2.3.md \
-    --latest
-else
-  echo "Stop: npm gitHead differs from the current commit." >&2
-fi
-
-gh release view v0.2.3 --repo smallfield5656/control-plane
+gh release create "v$release_version" \
+  --repo smallfield5656/control-plane \
+  --target "$release_commit" \
+  --title "v$release_version" \
+  --notes-file "../../docs/releases/v$release_version.md" \
+  --latest
+gh release view "v$release_version" --repo smallfield5656/control-plane
 ```
 
 最後に一時Directoryで公開物を確認する。
 
 ```bash
+release_version="0.3.0"
 verify_dir=$(mktemp -d)
 cd "$verify_dir"
-npx --yes @smallfield5656/control-plane@0.2.3 --version
-npx --yes @smallfield5656/control-plane@0.2.3 init demo
-npx --yes @smallfield5656/control-plane@0.2.3 doctor demo
-npx --yes @smallfield5656/control-plane@0.2.3 next demo
-npx --yes @smallfield5656/control-plane@0.2.3 check demo
+npx --yes "@smallfield5656/control-plane@$release_version" --version
+npx --yes "@smallfield5656/control-plane@$release_version" init demo
+npx --yes "@smallfield5656/control-plane@$release_version" doctor demo
+npx --yes "@smallfield5656/control-plane@$release_version" next demo
+npx --yes "@smallfield5656/control-plane@$release_version" check demo
 ```
