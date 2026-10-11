@@ -8,13 +8,13 @@ Maintenance scopeの工数・費用を管理するSSOT。AI Agent Elapsed、Huma
 
 ## Confidence
 
-Low — 承認操作・移行・復旧・shell補完の実装時間は未実測。特にcrash recoveryと両shellのintegration testに不確実性がある。
+Low — 記載工数は実装前の参考見積もりで、実装時間・人間の関与時間は未実測。完了したScopeを現在の残工数として扱わない。完了状況は `milestones.md` を参照する。
 
 ## Assumptions
 
 - 今回のScopeは `charter.md`、受入条件は `../product/requirements.md` を正本とする。
-- 新しい永続判断はADR-0007 / ADR-0008でレビューし、Architecture Gateの後に実装する。
-- 既存TypeScript / Node.jsと標準libraryを維持する案で、実行時依存やhosted infrastructureを追加しない。
+- 新しい永続判断はADR-0007 / ADR-0008でレビューし、Architecture Gateの後に実装した。
+- 既存TypeScript / Node.jsと標準libraryを維持し、実行時依存やhosted infrastructureを追加しなかった。
 - npm / GitHub Releaseへの公開は、ReviewとWindows / Linux CIを確認した後に行う。
 - 過去のMVP / Release Readinessは完了済み。過去の見積もりを現在の残工数として扱わない。
 
@@ -57,6 +57,6 @@ Not calculated
 
 ## Main Uncertainty
 
-Windows / Linuxでのfile置換・ロック、途中失敗の復旧、PowerShellの実際の補完機構、packed artifact、Reviewとnpmの人間承認待ち。公開済みnpm artifactの確認前にRelease完了とは扱わない。
+実装前の主な不確実性は、Windows / Linuxでのfile置換・ロック、途中失敗の復旧、PowerShellの実補完、packed artifact、Reviewとnpmの人間承認待ちだった。これらの検証と公開Gateは完了したが、実測工数・費用や効果量は未集計。将来のMaintenance工数へこの参考rangeを転用しない。
 
 過去の見積もりの変更履歴はGit、完了したRelease Readinessの成果は `docs/plans/completed/cli-mvp-release-readiness.md` を参照する。
