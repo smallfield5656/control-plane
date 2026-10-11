@@ -128,3 +128,18 @@ v0.1.0の初期CLIは `init / doctor / check` に限定し、必要性が未実�
 - 通常開発全体のPrompt generator
 - `status` command
 - `--lang` / `--json`
+
+### REQ-009: AI-assisted effort comparison
+
+**Statement**
+
+利用者は、AI Agentと協働するProjectのDelivery Estimateで、AIの実行時間、人間の関与時間、人間のみで実施した場合の参考工数を分けて比較できる。
+
+**Acceptance Criteria**
+
+- [ ] `template/docs/delivery/estimate.md` が `AI Agent Elapsed` / `Human Involvement` / `Human-only Equivalent` を別々に記録できる。
+- [ ] `AI Agent Elapsed` をHuman laborとして扱わない。
+- [ ] `AI Agent Elapsed` と `Human Involvement` を総工数として単純合算しない。
+- [ ] `Human-only Equivalent` は同じScopeと品質条件を前提とした比較用Estimateとして扱う。
+- [ ] Human-only Equivalentが実測でない場合、AssumptionsとConfidenceを明示する。
+- [ ] Bootstrap WorkflowがAgentへ同じ見積もりルールを指示する。
