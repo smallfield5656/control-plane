@@ -83,6 +83,8 @@ Spike には仮説、成功条件、測定値、結論を残す。
 
 人間の承認が必要な判断は、承認前はADRを `Proposed` とする。Architecture Gateで承認されたら `Accepted`、却下されたら `Rejected` に更新する。方針変更時は新しいADRを作り、旧ADRを `Superseded` にする。
 
+Bootstrap完了後にAccepted Decisionを変更する場合も、過去のADRを書き換えず新しいADRでSupersedeする。通常開発時の詳細なDecision変更フローは `agent/workflows/issue.md` を正本とする。
+
 Approvalはfile-orientedではなくdecision-orientedに扱う。`docs/product/` や `docs/delivery/` は判断材料となるSSOTであり、各ファイル自体へ承認状態を持たせない。Human Gateでは、Review Inputsを確認したうえでADRなどのDecisionを判断する。
 
 専用の承認ログは持たない。必要な変更履歴はADRのStatusとGit / Pull Requestの履歴へ委ねる。ただし監査・法令・契約などで明示的な承認記録が必要な場合は、Project固有の要件として追加する。

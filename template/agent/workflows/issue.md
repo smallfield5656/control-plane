@@ -44,6 +44,10 @@ RequirementやConstraintを推測で変更してはならない。
 - Operations
 - External contracts
 
+すべての仕様変更でADRを作る必要はない。RequirementやUI behaviorだけが変わり、既存Architecture Decisionを維持できる場合は、対応するSSOT / Test / Implementationを更新する。
+
+一方、Accepted ADRで確定した長期的なArchitecture / Technology Decisionを変更する必要がある場合は、Architecture impactとして扱う。
+
 Cost / Risk / Timeline / Security / Architectureへの重大な影響がある場合は、実装前に人間の判断を求める。
 
 Security impactがある場合は `docs/operations/development.md` のSecurity Review Triggersを確認する。
@@ -64,6 +68,22 @@ IssueやIssueコメントで合意した会話や合意履歴そのものをRepo
 Issueコメントを永続仕様として参照し続けない。合意の経緯を別のmeeting noteやapproval logへ形式的に複製しない。判断理由を将来残す必要がある場合はADRなど、その情報のSSOTへ必要なContext / Decision / Consequencesだけを記録する。
 
 重大なDecisionを伴う場合は、Durable Truthを更新し、必要なHuman Gateを通してから実装へ進む。小さなBug Fixや軽微変更では、文書変更と実装を形式的に別PRへ分ける必要はない。
+
+### Decision Change / ADR Supersession
+
+Accepted ADRで確定したDecisionを後から変更する場合、過去の判断履歴を現在仕様に合わせて書き換えない。
+
+- Accepted ADRのDecision本文を直接書き換えて、新しい判断として扱わない。
+- 新しいDecisionを別ADRとして作成し、承認前は `Proposed` とする。
+- 新ADRの `Supersedes` に置き換える旧ADRを明記する。
+- 必要なHuman Gateを通し、新ADRが承認されたら `Accepted` にする。
+- 新ADRがAcceptedになった時点で、置き換えられる旧ADRを `Superseded` にする。
+- その後、`ARCHITECTURE.md` を新しい現在状態へ更新してから実装を進める。
+- 新ADRがRejectedの場合、旧ADRは引き続き有効なDecisionとして扱う。
+
+Requirements may evolve. Decisions may be superseded. History should not be rewritten.
+
+ADRは「なぜそのDecisionをしたか」というDecision historyを残す。`ARCHITECTURE.md` は「今なにが有効か」というcurrent stateを表す。
 
 ## 6. Implement
 

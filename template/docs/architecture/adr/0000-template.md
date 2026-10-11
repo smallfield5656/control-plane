@@ -16,6 +16,12 @@ ConstraintとTechnology Decisionを混同しない。ここには、Requirements
 
 人間のArchitecture Gateが必要な判断は、承認前はStatusを `Proposed` とする。承認後は `Accepted`、却下時は `Rejected` に更新する。
 
+AcceptedになったADRはDecision historyである。後からArchitecture / Technology Decisionを変更する場合、既存のAccepted ADRのDecision本文を新しい判断に合わせて書き換えない。
+
+Decisionを置き換える場合は、新しいADRを `Proposed` として作成し、`Supersedes` に旧ADRを記載する。新ADRがAcceptedになったら旧ADRを `Superseded` にする。新ADRがRejectedの場合、旧ADRは引き続き有効とする。
+
+ADRは「なぜそのDecisionをしたか」というDecision historyを残し、`ARCHITECTURE.md` は「今なにが有効か」というcurrent stateを表す。
+
 ## Consequences
 
 ### Positive

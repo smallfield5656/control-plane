@@ -56,7 +56,9 @@ test("repository template contains the generated project contract", async () => 
     "docs/product/requirements.md",
     "docs/product/constraints.md",
     "docs/delivery/estimate.md",
+    "docs/architecture/adr/0000-template.md",
     "agent/workflows/bootstrap.md",
+    "agent/workflows/issue.md",
     "scripts/check.sh",
     "scripts/check.ps1"
   ]) {
@@ -71,4 +73,24 @@ test("estimate template separates AI elapsed time, human involvement, and human-
   assert.match(estimate, /Human Involvement/);
   assert.match(estimate, /Human-only Equivalent/);
   assert.match(estimate, /単純合算しない/);
+});
+
+test("issue workflow preserves accepted ADR history when a decision changes", async () => {
+  const issueWorkflow = await readFile(path.join(repoRoot, "template/agent/workflows/issue.md"), "utf8");
+
+  assert.match(issueWorkflow, /すべての仕様変更でADRを作る必要はない/);
+  assert.match(issueWorkflow, /Accepted ADR.*直接書き換え/);
+  assert.match(issueWorkflow, /新しいDecision.*別ADR.*Proposed/);
+  assert.match(issueWorkflow, /Supersedes/);
+  assert.match(issueWorkflow, /旧ADR.*Superseded/);
+  assert.match(issueWorkflow, /ARCHITECTURE\.md.*現在/);
+});
+
+test("ADR template distinguishes decision history from current architecture", async () => {
+  const adrTemplate = await readFile(path.join(repoRoot, "template/docs/architecture/adr/0000-template.md"), "utf8");
+
+  assert.match(adrTemplate, /Accepted.*Decision.*書き換え/);
+  assert.match(adrTemplate, /Supersedes/);
+  assert.match(adrTemplate, /Decision history/);
+  assert.match(adrTemplate, /ARCHITECTURE\.md.*current state/);
 });
