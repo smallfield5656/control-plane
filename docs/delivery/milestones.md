@@ -20,9 +20,9 @@
 ## Current Progress
 
 - CLIは `init / doctor / next / check` と `bootstrap` 互換Aliasを提供する。
-- 確認時点のnpm `latest` とGitHub Releaseは `0.2.3`。初期MVPの完了記録は `docs/plans/completed/cli-mvp-release-readiness.md` を参照する。
-- 次のpatch `0.2.4` を準備する。対象はControl Plane製品の完成例を生成Projectから分離し、Project固有の文脈だけを配置する変更。
-- Local validation、Windows / Linux CI、Review、npm publish、GitHub Release、公開artifactのdogfoodがRelease Gate。公開状態は未完了。
+- 確認時点のnpm `latest` とGitHub Releaseは `0.2.4`。初期MVPの完了記録は `docs/plans/completed/cli-mvp-release-readiness.md` を参照する。
+- `0.2.4` ではControl Plane製品の完成例を生成Projectから分離し、Project固有の文脈だけを配置する変更を公開した。
+- Local validation、Windows / Linux CI、Review、npm publish、GitHub Release、公開artifactのGolden Path確認が成功し、`0.2.4` Release Gateは完了した。
 - Template assetはroot `template/` が唯一の正本。具体的なbuild / distribution境界は `ARCHITECTURE.md`、公開手順は `docs/operations/release.md` を参照する。
 
 ## Rules
