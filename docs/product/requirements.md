@@ -143,3 +143,21 @@ v0.1.0の初期CLIは `init / doctor / check` に限定し、必要性が未実�
 - [ ] `Human-only Equivalent` は同じScopeと品質条件を前提とした比較用Estimateとして扱う。
 - [ ] Human-only Equivalentが実測でない場合、AssumptionsとConfidenceを明示する。
 - [ ] Bootstrap WorkflowがAgentへ同じ見積もりルールを指示する。
+
+### REQ-010: Ongoing development bridge
+
+**Statement**
+
+利用者は、Bootstrap完了後も `control-plane bootstrap` からIssue-drivenな通常開発へ迷わず移行できる。
+
+**Acceptance Criteria**
+
+- [ ] Bootstrap Completeでは `Next Step: Ongoing Development` を表示する。
+- [ ] 変更要求の標準Intakeとして `GitHub Issue` を案内する。
+- [ ] `Suggested Instruction` は `AGENTS.md` と `agent/workflows/issue.md` を入口として参照する。
+- [ ] 利用者が `<ここに変更したい内容を書く>` を置換してAI Agentへ渡せる固定Instructionを表示する。
+- [ ] InstructionはIssue作成後にRequirements / Constraints / Architecture / Cost / Risk / TimelineへのImpact Analysisを求める。
+- [ ] Architecture Decision変更が必要な場合は新ADRを `Proposed` として準備し、実装前のHuman Gateで停止するよう案内する。
+- [ ] CLI自身はIssueを作成せず、Issue番号や変更内容をRepository状態から推測しない。
+- [ ] Bootstrap Complete状態でも `control-plane check` によるValidation導線を維持する。
+- [ ] Workflow本文はCLIへ複製せず、詳細はRepository上のIssue WorkflowをSource of Truthとする。

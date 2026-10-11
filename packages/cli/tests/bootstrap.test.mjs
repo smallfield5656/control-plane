@@ -146,7 +146,7 @@ test("bootstrap guides finalization after architecture is resolved", async () =>
   await rm(root, { recursive: true, force: true });
 });
 
-test("bootstrap reports completion when bootstrap state is resolved", async () => {
+test("bootstrap bridges a completed project into issue-driven ongoing development", async () => {
   const { root, project } = await fixtureFromTemplate();
   await completeBootstrapDocs(project);
   await writeFile(path.join(project, "ARCHITECTURE.md"), "# Architecture\n\n## Context\nCurrent architecture.\n\n## Technology Stack\nNode.js.\n");
@@ -157,10 +157,20 @@ test("bootstrap reports completion when bootstrap state is resolved", async () =
   const output = formatBootstrapReport(report);
 
   assert.equal(report.phase, "Bootstrap Complete");
-  assert.equal(report.nextStep, "Complete");
+  assert.equal(report.nextStep, "Ongoing Development");
+  assert.equal(report.changeIntake, "GitHub Issue");
   assert.deepEqual(report.workOn, []);
   assert.match(output, /Human Gate:\s+None/);
-  assert.doesNotMatch(output, /Suggested Instruction:/);
+  assert.match(output, /Next Step:\s+Ongoing Development/);
+  assert.match(output, /Change Intake:\s+GitHub Issue/);
+  assert.match(output, /Suggested Instruction:/);
+  assert.match(output, /AGENTS\.md と agent\/workflows\/issue\.md を読んでください/);
+  assert.match(output, /変更内容: <ここに変更したい内容を書く>/);
+  assert.match(output, /GitHub Issueを作成してください/);
+  assert.match(output, /Architecture Decisionの変更が必要な場合/);
+  assert.match(output, /Proposed/);
+  assert.match(output, /Human Gateで停止してください/);
   assert.match(output, /control-plane check/);
+  assert.doesNotMatch(output, /Issue #\d+/);
   await rm(root, { recursive: true, force: true });
 });

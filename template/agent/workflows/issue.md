@@ -65,6 +65,18 @@ IssueやIssueコメントで合意した会話や合意履歴そのものをRepo
 - Architecture decision → ADR
 - Current architecture → `ARCHITECTURE.md`
 
+### Current Truth / Decision History / Change History
+
+Repository上の情報は役割を分けて扱う。
+
+- `requirements.md` / `constraints.md` / Delivery文書 / `ARCHITECTURE.md` は、原則として**現在有効な状態を表すCurrent Truth**。変更要求が採用されたら、現在有効な内容へ更新する。
+- ADRは**Decision History**。Accepted済みの過去Decisionを現在仕様に合わせて書き換えず、Decision変更は新ADRで表す。
+- Issue / Pull Request / Git historyは**Change History**。変更要求、議論、差分、いつ何が変わったかを追跡する。
+
+Current state documents are updated. Decision records are superseded. Git preserves history.
+
+Current Truthの過去版を残す目的だけで `requirements-v2.md` や `ARCHITECTURE-old.md` のような版別ファイルを通常運用として増やさない。過去差分が必要な場合はGit / Pull Requestを参照する。
+
 Issueコメントを永続仕様として参照し続けない。合意の経緯を別のmeeting noteやapproval logへ形式的に複製しない。判断理由を将来残す必要がある場合はADRなど、その情報のSSOTへ必要なContext / Decision / Consequencesだけを記録する。
 
 重大なDecisionを伴う場合は、Durable Truthを更新し、必要なHuman Gateを通してから実装へ進む。小さなBug Fixや軽微変更では、文書変更と実装を形式的に別PRへ分ける必要はない。
