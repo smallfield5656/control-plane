@@ -43,13 +43,7 @@ $requiredFiles = @(
     ".github/ISSUE_TEMPLATE/feature.yml",
     ".github/ISSUE_TEMPLATE/bug.yml",
     ".github/ISSUE_TEMPLATE/investigation.yml",
-    ".github/pull_request_template.md",
-    "examples/file-organizer/README.md",
-    "examples/file-organizer/overview.md",
-    "examples/file-organizer/requirements.md",
-    "examples/file-organizer/constraints.md",
-    "examples/file-organizer/adr-0001-use-tauri.md",
-    "examples/file-organizer/ARCHITECTURE.md"
+    ".github/pull_request_template.md"
 )
 
 foreach ($file in $requiredFiles) {
@@ -83,9 +77,6 @@ Require-Heading "agent/workflows/bootstrap.md" "## Bootstrap Completion Gate"
 Require-Heading "agent/workflows/issue.md" "## 4. Impact Analysis"
 Require-Heading ".agents/skills/project-bootstrap/SKILL.md" "## Bootstrap Preparation Complete"
 Require-Heading ".agents/skills/project-bootstrap/SKILL.md" "## Bootstrap完了条件"
-Require-Heading "examples/file-organizer/adr-0001-use-tauri.md" "## Context"
-Require-Heading "examples/file-organizer/adr-0001-use-tauri.md" "## Decision"
-Require-Heading "examples/file-organizer/adr-0001-use-tauri.md" "## Consequences"
 
 Write-Host "Document shape: OK"
 

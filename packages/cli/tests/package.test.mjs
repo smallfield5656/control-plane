@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
@@ -44,6 +44,7 @@ test("packed package installs and runs the CLI golden path with the bundled temp
     const expectedGitignore = await readFile(path.resolve(packageDir, "../../template/.gitignore"), "utf8");
     assert.equal(await readFile(path.join(target, ".gitignore"), "utf8"), expectedGitignore);
     await assert.rejects(() => readFile(path.join(target, "gitignore.template")), { code: "ENOENT" });
+    await assert.rejects(() => stat(path.join(target, "examples")), { code: "ENOENT" });
     const repoRoot = path.resolve(packageDir, "../..");
     const assets = exec("git", ["ls-files", "-z", "--", "template/"], { cwd: repoRoot }).split("\0").filter(Boolean);
     for (const asset of assets) {

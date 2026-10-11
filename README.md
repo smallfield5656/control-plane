@@ -87,6 +87,12 @@ Issue / Pull Request / Git
 
 Current state documents are updated. Decision records are superseded. Git preserves history.
 
+## Completed Example
+
+[File Organizer Example](examples/file-organizer/README.md) は、Product Goal → Requirements → Constraints → ADR → Architectureのつながりを示すControl Plane製品側の参照資料です。
+
+Project固有のTechnology Decisionと混同しないよう、`control-plane init` の生成物には含めません。
+
 ## Development Quick Start
 
 control-plane自身を開発する場合:
@@ -136,7 +142,7 @@ control-plane/
 ├── packages/
 │   └── cli/              # npm package / TypeScript CLI
 ├── template/             # 生成先Project assetの唯一の正本
-└── examples/             # template/examples/ への入口
+└── examples/             # Control Plane製品の完成例
 ```
 
 ## Sources of Truth
