@@ -38,7 +38,7 @@
     "clean-template": "node scripts/clean-template.mjs",
     "prepack": "npm run build && npm run stage-template",
     "postpack": "npm run clean-template",
-    "test": "npm run build && node --test tests/init.test.mjs tests/doctor.test.mjs tests/check.test.mjs tests/package.test.mjs"
+    "test": "npm run build && node --test tests/init.test.mjs tests/doctor.test.mjs tests/bootstrap.test.mjs tests/check.test.mjs tests/package.test.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
