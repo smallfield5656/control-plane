@@ -11,6 +11,13 @@
 
 Bootstrap後、このREADMEはProject固有のPurpose / Setup / Run / Validationへの入口へ置き換えてください。
 
+## Agent Assets
+
+- Standard Agent Skills: `.agents/skills/`
+- Control Plane workflows: `agent/workflows/`
+
+SkillはWorkflowやDurable Truthを複製せず、それらを実行するためのAdapterとして扱います。
+
 ## Sources of Truth
 
 - Product: `docs/product/`
@@ -19,6 +26,7 @@ Bootstrap後、このREADMEはProject固有のPurpose / Setup / Run / Validation
 - ADR: `docs/architecture/adr/`
 - Testing: `docs/testing/strategy.md`
 - Development: `docs/operations/development.md`
+- Agent Skills: `.agents/skills/`
 - Agent workflows: `agent/workflows/`
 
 ## Principles
