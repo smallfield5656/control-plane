@@ -43,13 +43,13 @@ async function completeDelivery(project) {
 async function completeBootstrapDocs(project) {
   await completeProductDefinition(project);
   await completeDelivery(project);
-  approve(project, ["product-goal", "requirements", "constraints", "delivery"]);
+  approve(project, ["product-overview", "requirements", "constraints", "delivery"]);
 }
 
 function approve(project, items) {
-  const script = path.join(project, ".agents/skills/project-bootstrap/scripts/record-approval.mjs");
+  const script = path.join(packageDir, "dist/index.js");
   for (const item of items) {
-    execFileSync(process.execPath, [script, item], { cwd: project, stdio: "pipe" });
+    execFileSync(process.execPath, [script, "approve", item], { cwd: project, stdio: "pipe" });
   }
 }
 
@@ -67,7 +67,7 @@ test("bootstrap turns fresh project state into copyable Product Definition guida
   assert.match(output, /Next Step:\s+Product Definition/);
   assert.match(output, /Work On:\s+docs\/product\/overview\.md\s+docs\/product\/requirements\.md/);
   assert.match(output, /Goal:/);
-  assert.match(output, /Product Goalと主要Requirements \/ Acceptance Criteria/);
+  assert.match(output, /Product Overviewと主要Requirements \/ Acceptance Criteria/);
   assert.match(output, /Suggested Instruction:/);
   assert.match(output, /docs\/product\/overview\.md と docs\/product\/requirements\.md と docs\/product\/constraints\.md を更新してください/);
   assert.doesNotMatch(output, /上記ファイル/);
@@ -79,7 +79,7 @@ test("bootstrap turns fresh project state into copyable Product Definition guida
 test("bootstrap moves to Delivery Framing and lists only incomplete delivery files", async () => {
   const { root, project } = await fixtureFromTemplate();
   await completeProductDefinition(project);
-  approve(project, ["product-goal", "requirements", "constraints"]);
+  approve(project, ["product-overview", "requirements", "constraints"]);
   const { bootstrapProject, formatBootstrapReport } = await import(moduleUrl);
 
   const report = await bootstrapProject(project);

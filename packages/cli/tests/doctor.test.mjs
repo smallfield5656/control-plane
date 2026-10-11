@@ -35,13 +35,13 @@ async function completeBootstrapDocs(project) {
   await writeFile(path.join(project, "docs/delivery/estimate.md"), "# Estimate\n\n## Confidence\nMedium.\n");
   await writeFile(path.join(project, "docs/delivery/risks.md"), "# Risks\n\n## Risk Register\nNo major risks.\n");
   await writeFile(path.join(project, "docs/delivery/milestones.md"), "# Milestones\n\n## Milestone Plan\nMVP.\n");
-  approve(project, ["product-goal", "requirements", "constraints", "delivery"]);
+  approve(project, ["product-overview", "requirements", "constraints", "delivery"]);
 }
 
 function approve(project, items) {
-  const script = path.join(project, ".agents/skills/project-bootstrap/scripts/record-approval.mjs");
+  const script = path.join(packageDir, "dist/index.js");
   for (const item of items) {
-    execFileSync(process.execPath, [script, item], { cwd: project, stdio: "pipe" });
+    execFileSync(process.execPath, [script, "approve", item], { cwd: project, stdio: "pipe" });
   }
 }
 

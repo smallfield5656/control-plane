@@ -1,8 +1,9 @@
 # ADR-0006: 明示的人間承認をBootstrap Current Stateへ記録する
 
-- Status: Accepted
+- Status: Superseded
 - Date: 2026-10-11
 - Supersedes: —
+- Superseded By: ADR-0007（Agent adapterによる承認記録と個別ADR照合の責務）
 
 ## Context
 

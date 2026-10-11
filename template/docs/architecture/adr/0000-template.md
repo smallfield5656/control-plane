@@ -3,6 +3,7 @@
 - Status: Proposed
 - Date: YYYY-MM-DD
 - Supersedes: —
+- Superseded By: —
 
 ## Context
 
@@ -14,7 +15,7 @@ ConstraintとTechnology Decisionを混同しない。ここには、Requirements
 
 採用する判断を明確に書く。
 
-人間のArchitecture Gateが必要な判断は、承認前はStatusを `Proposed` とする。承認後は `Accepted`、却下時は `Rejected` に更新する。
+人間の判断記録とADRの操作は `docs/architecture/adr/README.md` に従う。
 
 AcceptedになったADRはDecision historyである。後からArchitecture / Technology Decisionを変更する場合、既存のAccepted ADRのDecision本文を新しい判断に合わせて書き換えない。
 

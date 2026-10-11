@@ -12,7 +12,7 @@ package versionの正本は `packages/cli/package.json`。lockfileは同じversi
 2. `npm --prefix packages/cli ci` と `scripts/check.*` を実行し、Windows / Linux CIの成功を確認する。
 3. versionが未更新なら `packages/cli/` で `npm version patch --no-git-tag-version` を実行し、package.jsonとlockfileをcommitする。
 4. version更新後の検証結果を確認する。packed artifact integration testが正本の `.gitignore`、CLI version、Golden Pathを確認する。
-5. `npm pack --dry-run --json` で配布file一覧をReviewする。CLIのbuild出力とgenerated Template、package metadata、READMEだけを配布する。
+5. `npm pack --dry-run --json` で配布file一覧をReviewする。CLIのbuild出力、owned shell補完asset、generated Template、package metadata、READMEだけを配布する。lock / journal / temporary fileは配布しない。
 
 ## Publish
 
@@ -42,6 +42,8 @@ Release notesは `docs/releases/v<version>.md` に保存し、短い英語の概
 ## Verify Published Artifact
 
 公開versionを明示してclean Directoryで `--version → init → doctor → next → check` を確認し、生成先の `.gitignore` があることを確認する。
+
+承認・移行・補完を含むReleaseでは、公開CLIで文書準備→上流承認→個別ADR採用→Current Architecture反映→Architecture承認を確認する。Bash / PowerShell補完scriptと候補取得も公開artifactから確認する。
 
 公開済みCLIに `update` はない。既存ProjectのTemplateは自動更新されないため、Migrationが必要ならRelease notesで対象fileと手動更新方法を案内する。
 

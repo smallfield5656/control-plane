@@ -34,10 +34,28 @@ export interface BootstrapStateItemDefinition {
   approval: BootstrapApproval | null;
 }
 
+export interface AdrDecisionRecord {
+  kind: "accepted" | "rejected" | "migrated-superseded";
+  origin?: "migration";
+  file: string;
+  revision: string;
+  decisionRevision: string;
+  upstream: Record<string, string>;
+  reasonRevision?: string;
+}
+
+export interface AdrDefinition {
+  directory: string;
+  architectureItem: string;
+  dependsOn: string[];
+  decisions: Record<string, AdrDecisionRecord>;
+}
+
 export interface BootstrapStateDefinition {
-  schemaVersion: 1;
+  schemaVersion: 1 | 2;
   revisionAlgorithm: typeof BOOTSTRAP_REVISION_ALGORITHM;
   items: BootstrapStateItemDefinition[];
+  adr?: AdrDefinition;
 }
 
 export interface ResolvedBootstrapStateItem extends BootstrapStateItemDefinition {
@@ -45,6 +63,7 @@ export interface ResolvedBootstrapStateItem extends BootstrapStateItemDefinition
   detail: string;
   directInputs: string[];
   approvalScope: string[];
+  ready: boolean;
 }
 
 export interface ResolvedBootstrapState {
@@ -83,10 +102,10 @@ function stringArray(value: unknown, label: string): string[] {
   return value.map((entry, index) => stringValue(entry, `${label}[${index}]`));
 }
 
-function repositoryPath(value: unknown, label: string): string {
+export function repositoryPath(value: unknown, label = "path"): string {
   const candidate = stringValue(value, label);
   if (
-    candidate.includes("\\") ||
+    /[\\:\x00-\x1f]/.test(candidate) || candidate === "." ||
     path.posix.isAbsolute(candidate) ||
     path.posix.normalize(candidate) !== candidate ||
     candidate === ".." ||
@@ -119,9 +138,9 @@ function parseApproval(value: unknown, label: string): BootstrapApproval | null 
   return { status: "approved", files: parsedFiles };
 }
 
-function parseDefinition(value: unknown): BootstrapStateDefinition {
+export function parseDefinition(value: unknown): BootstrapStateDefinition {
   const root = objectValue(value, "Bootstrap state");
-  if (root.schemaVersion !== 1) fail("schemaVersion must be 1");
+  if (root.schemaVersion !== 1 && root.schemaVersion !== 2) fail("schemaVersion must be 1 or 2");
   if (root.revisionAlgorithm !== BOOTSTRAP_REVISION_ALGORITHM) {
     fail(`revisionAlgorithm must be ${BOOTSTRAP_REVISION_ALGORITHM}`);
   }
@@ -132,7 +151,7 @@ function parseDefinition(value: unknown): BootstrapStateDefinition {
   const items = root.items.map((value, index): BootstrapStateItemDefinition => {
     const item = objectValue(value, `items[${index}]`);
     const id = stringValue(item.id, `items[${index}].id`);
-    if (!/^[a-z0-9][a-z0-9-]*$/.test(id)) fail(`items[${index}].id must be kebab-case`);
+    if (!/^[a-z0-9][a-z0-9-]*$/.test(id) || id === "adr") fail(`items[${index}].id must be kebab-case and not reserved adr`);
     const inputs = unique(
       stringArray(item.inputs, `items[${index}].inputs`).map((input, inputIndex) =>
         repositoryPath(input, `items[${index}].inputs[${inputIndex}]`)
@@ -197,7 +216,50 @@ function parseDefinition(value: unknown): BootstrapStateDefinition {
   };
   for (const id of ids) visit(id);
 
-  return { schemaVersion: 1, revisionAlgorithm: BOOTSTRAP_REVISION_ALGORITHM, items };
+  let adr: AdrDefinition | undefined;
+  if (root.schemaVersion === 2) {
+    const raw = objectValue(root.adr, "adr");
+    const directory = repositoryPath(raw.directory, "adr.directory");
+    const architectureItem = stringValue(raw.architectureItem, "adr.architectureItem");
+    const architecture = items.find(item => item.id === architectureItem);
+    if (!architecture || architecture.stage !== "Architecture" || items.filter(item => item.stage === "Architecture").length !== 1) fail("adr.architectureItem must identify the unique Architecture item");
+    const scope = architecture.inputDirectories.filter(input => input.path === directory);
+    if (scope.length !== 1 || scope[0].extension !== ".md" || scope[0].exclude.some(file => file !== "0000-template.md" && file !== "README.md")) fail("Architecture must include the complete ADR directory");
+    const dependsOn = unique(stringArray(raw.dependsOn, "adr.dependsOn"), "adr.dependsOn");
+    if (!dependsOn.length || dependsOn.some(id => !known.has(id) || byId.get(id)?.stage === "Architecture")) fail("adr.dependsOn must reference upstream non-Architecture items");
+    const dependencyIds = new Set<string>();
+    const collect = (id: string) => { if (dependencyIds.has(id)) return; dependencyIds.add(id); for (const dep of byId.get(id)!.dependsOn) collect(dep); };
+    for (const id of dependsOn) collect(id);
+    if (dependencyIds.has(architectureItem)) fail("ADR upstream cannot depend on Architecture");
+    const architectureDependencies = new Set<string>();
+    const collectArchitecture = (id: string) => { if (architectureDependencies.has(id)) return; architectureDependencies.add(id); for (const dep of byId.get(id)!.dependsOn) collectArchitecture(dep); };
+    collectArchitecture(architectureItem);
+    if ([...dependencyIds].some(id => !architectureDependencies.has(id))) fail("Architecture must depend on all ADR upstream items");
+    const decisions: Record<string, AdrDecisionRecord> = Object.create(null);
+    for (const [number, value] of Object.entries(objectValue(raw.decisions, "adr.decisions"))) {
+      if (!/^(?!0000)[0-9]{4}$/.test(number)) fail("invalid ADR decision number");
+      const record = objectValue(value, `adr.decisions.${number}`);
+      if (!["accepted", "rejected", "migrated-superseded"].includes(String(record.kind))) fail("invalid ADR record kind");
+      if (record.origin !== undefined && record.origin !== "migration") fail("invalid ADR record origin");
+      const file = repositoryPath(record.file, "ADR record file");
+      if (path.posix.dirname(file) !== directory || !path.posix.basename(file).startsWith(`${number}-`) || !file.endsWith(".md")) fail("ADR record path must match its number and directory");
+      const revision = revisionValue(record.revision);
+      const decisionRevision = revisionValue(record.decisionRevision);
+      const upstream = parseApproval({ status: "approved", files: record.upstream }, "ADR upstream")!.files;
+      const reasonRevision = record.reasonRevision === undefined ? undefined : revisionValue(record.reasonRevision);
+      if (record.kind === "rejected" && (!reasonRevision || Object.keys(upstream).length)) fail("Rejected record requires a reason revision and no upstream");
+      if (record.kind !== "rejected" && reasonRevision) fail("reason revision only belongs to rejected records");
+      decisions[number] = { kind: record.kind as AdrDecisionRecord["kind"], ...(record.origin ? { origin: "migration" as const } : {}), file, revision, decisionRevision, upstream, ...(reasonRevision ? { reasonRevision } : {}) };
+    }
+    adr = { directory, architectureItem, dependsOn, decisions };
+  }
+  return { schemaVersion: root.schemaVersion, revisionAlgorithm: BOOTSTRAP_REVISION_ALGORITHM, items, ...(adr ? { adr } : {}) };
+}
+
+function revisionValue(value: unknown): string {
+  const revision = stringValue(value, "revision");
+  if (!/^sha256:[a-f0-9]{64}$/.test(revision)) fail("invalid sha256 revision");
+  return revision;
 }
 
 function insideRoot(root: string, candidate: string): boolean {
@@ -205,20 +267,30 @@ function insideRoot(root: string, candidate: string): boolean {
   return relative === "" || (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative));
 }
 
-async function validateFile(root: string, realRoot: string, relative: string): Promise<void> {
+export async function validateFile(root: string, realRoot: string, relative: string, maxBytes = MAX_INPUT_BYTES): Promise<void> {
+  repositoryPath(relative);
   const absolute = path.resolve(root, ...relative.split("/"));
   if (!insideRoot(root, absolute)) fail(`input escapes repository: ${relative}`);
   const info = await lstat(absolute).catch(() => undefined);
   if (!info?.isFile()) fail(`input must be a regular file: ${relative}`);
-  if (info.size > MAX_INPUT_BYTES) fail(`input exceeds ${MAX_INPUT_BYTES} bytes: ${relative}`);
+  if (info.size > maxBytes) fail(`input exceeds ${maxBytes} bytes: ${relative}`);
   const resolved = await realpath(absolute);
   if (!insideRoot(realRoot, resolved)) fail(`input resolves outside repository: ${relative}`);
+  if (path.relative(realRoot, resolved).split(path.sep).join("/") !== relative) fail(`input resolves through a symbolic directory: ${relative}`);
+}
+
+export async function validateDirectory(root: string, relative: string): Promise<void> {
+  repositoryPath(relative);
+  const info = await lstat(path.join(root, relative)).catch(() => undefined);
+  const realRoot = await realpath(root);
+  if (!info?.isDirectory() || path.relative(realRoot, await realpath(path.join(root, relative))).split(path.sep).join("/") !== relative) fail(`unsafe repository directory: ${relative}`);
 }
 
 async function expandInputs(root: string, realRoot: string, item: BootstrapStateItemDefinition): Promise<string[]> {
   const inputs = [...item.inputs];
   const known = new Set(inputs);
   for (const directory of item.inputDirectories) {
+    await validateDirectory(root, directory.path);
     const absolute = path.resolve(root, ...directory.path.split("/"));
     if (!insideRoot(root, absolute)) fail(`input directory escapes repository: ${directory.path}`);
     const info = await lstat(absolute).catch(() => undefined);
@@ -238,12 +310,14 @@ async function expandInputs(root: string, realRoot: string, item: BootstrapState
       }
     }
   }
+  if (!inputs.length) fail(`item ${item.id} has no approval inputs`);
   if (inputs.length > MAX_INPUTS) fail(`item ${item.id} exceeds ${MAX_INPUTS} inputs`);
   for (const input of inputs) await validateFile(root, realRoot, input);
   return inputs;
 }
 
 export async function hashBootstrapInput(root: string, relative: string): Promise<string> {
+  await validateFile(root, await realpath(root), relative);
   const bytes = await readFile(path.resolve(root, ...relative.split("/")));
   let text: string;
   try {
@@ -251,13 +325,23 @@ export async function hashBootstrapInput(root: string, relative: string): Promis
   } catch {
     fail(`input must be valid UTF-8 text: ${relative}`);
   }
-  const normalized = text.replace(/\r\n?/g, "\n");
-  return `sha256:${createHash("sha256").update(normalized, "utf8").digest("hex")}`;
+  return hashText(text);
+}
+
+export function hashText(text: string): string {
+  return `sha256:${createHash("sha256").update(text.replace(/\r\n?/g, "\n"), "utf8").digest("hex")}`;
+}
+
+export function hasBootstrapPlaceholder(relative: string, content: string): boolean {
+  return !content.trim() || /(^|[^A-Za-z0-9_])TODO([^A-Za-z0-9_]|$)/.test(content) ||
+    (relative.endsWith("requirements.md") && (content.includes("<短い名称>") || content.includes("<!-- プロジェクト固有の要求をここに追加する -->"))) ||
+    (relative === "ARCHITECTURE.md" && (content.includes("Bootstrap / Architecture Gate後に記載する。") || /Architecture Gate Pending/i.test(content)));
 }
 
 export async function readBootstrapState(rootDir: string): Promise<ResolvedBootstrapState> {
   const root = path.resolve(rootDir);
   const realRoot = await realpath(root);
+  await validateDirectory(root, ".control-plane");
   const statePath = path.join(root, BOOTSTRAP_STATE_FILE);
   const stateInfo = await lstat(statePath).catch(() => undefined);
   if (!stateInfo?.isFile()) fail(`${BOOTSTRAP_STATE_FILE} is missing`);
@@ -292,6 +376,13 @@ export async function readBootstrapState(rootDir: string): Promise<ResolvedBoots
   };
 
   const resolvedById = new Map<string, ResolvedBootstrapStateItem>();
+  const preparation = new Map<string, boolean>();
+  for (const inputs of directInputs.values()) for (const file of inputs) {
+    if (!preparation.has(file)) {
+      const text = new TextDecoder("utf-8", { fatal: true }).decode(await readFile(path.join(root, file)));
+      preparation.set(file, !hasBootstrapPlaceholder(file, text));
+    }
+  }
   const resolveItem = async (item: BootstrapStateItemDefinition): Promise<ResolvedBootstrapStateItem> => {
     const cached = resolvedById.get(item.id);
     if (cached) return cached;
@@ -325,7 +416,7 @@ export async function readBootstrapState(rootDir: string): Promise<ResolvedBoots
         detail = "explicit human approval matches current revision";
       }
     }
-    const result = { ...item, status, detail, directInputs: directInputs.get(item.id) ?? [], approvalScope: scope };
+    const result = { ...item, status, detail, directInputs: directInputs.get(item.id) ?? [], approvalScope: scope, ready: scope.every(file => preparation.get(file)) };
     resolvedById.set(item.id, result);
     return result;
   };

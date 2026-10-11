@@ -81,7 +81,7 @@ Spike には仮説、成功条件、測定値、結論を残す。
 
 長期的な影響がある技術選定は ADR に記録する。
 
-人間の承認が必要な判断は、承認前はADRを `Proposed` とする。Architecture Gateで承認されたら `Accepted`、却下されたら `Rejected` に更新する。方針変更時は新しいADRを作り、旧ADRを `Superseded` にする。
+人間の承認が必要な判断は、承認前はADRを `Proposed` とする。人間がCLIで判断を記録する。コマンド・Status遷移・却下理由・置き換えの形式は `docs/architecture/adr/README.md` を正本とする。
 
 Bootstrap完了後にAccepted Decisionを変更する場合も、過去のADRを書き換えず新しいADRでSupersedeする。通常開発時の詳細なDecision変更フローは `agent/workflows/issue.md` を正本とする。
 
@@ -89,7 +89,7 @@ Approvalは表示項目またはDecision Gate単位で扱う。`docs/product/` �
 
 現在の承認状態は `.control-plane/bootstrap-state.json` を正本とする。これはApproval historyではなくCurrent Stateであり、必要な変更履歴はADRのStatusとGit / Pull Requestの履歴へ委ねる。ただし監査・法令・契約などで本人性を含む承認記録が必要な場合は、Project固有の要件として署名やPR approvalを追加する。
 
-人間が項目を明示的に承認した場合だけ、`.agents/skills/project-bootstrap/SKILL.md` のadapterで対象と上流inputのrevisionを記録する。無言、会話終了、Agent自身の品質判断を承認と解釈しない。承認後に対象または上流inputが変わった場合は `Needs Review` とし、再承認まで次Stepへ進まない。
+人間は項目を確認してCLIで明示承認する。人間がAIへ対象を特定した承認を指示した場合も、`.agents/skills/project-bootstrap/SKILL.md` に従い同じCLIを使う。無言、会話終了、Agent自身の品質判断を承認と解釈しない。承認後に対象または上流inputが変わった場合は `Needs Review` とし、再承認まで次Stepへ進まない。
 
 Budget / Risk / Timelineへの重大な影響がある場合も、必要なDecision Gateを通す。
 
@@ -97,7 +97,7 @@ Budget / Risk / Timelineへの重大な影響がある場合も、必要なDecis
 
 ## 10. Current Architecture
 
-承認された現在状態を `ARCHITECTURE.md` に反映する。
+ADR採用後、AIが現在状態を `ARCHITECTURE.md` に反映する。人間が反映結果を確認し、stateに定義されたArchitecture項目をCLIで承認する。ADRの採用と設計全体の反映確認を分ける。
 
 ## 11. Scaffold
 

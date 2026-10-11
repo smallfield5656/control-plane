@@ -4,8 +4,11 @@ import {
   BOOTSTRAP_STATE_FILE,
   BootstrapStateError,
   readBootstrapState,
+  hasBootstrapPlaceholder,
   type ResolvedBootstrapState
 } from "./bootstrap-state.js";
+import { inspectAdrs, type AdrCheck } from "./adr.js";
+import { APPROVAL_JOURNAL, transactionPending } from "./approval-transaction.js";
 import { plainStyles, type OutputStyles } from "./output.js";
 
 export type DoctorStatus =
@@ -28,6 +31,7 @@ export interface DoctorReport {
   nextAction: string;
   hasErrors: boolean;
   bootstrapState?: ResolvedBootstrapState;
+  adrChecks?: AdrCheck[];
 }
 
 const REQUIRED_FILES = [
@@ -71,21 +75,6 @@ async function readText(root: string, relative: string): Promise<string | undefi
   } catch {
     return undefined;
   }
-}
-
-function hasBootstrapPlaceholder(relative: string, content: string): boolean {
-  if (/(^|[^A-Za-z0-9_])TODO([^A-Za-z0-9_]|$)/.test(content)) {
-    return true;
-  }
-
-  if (relative === "docs/product/requirements.md") {
-    return (
-      content.includes("<短い名称>") ||
-      content.includes("<!-- プロジェクト固有の要求をここに追加する -->")
-    );
-  }
-
-  return false;
 }
 
 async function proposedAdrs(root: string): Promise<string[]> {
@@ -150,6 +139,11 @@ export async function doctorProject(rootDir = process.cwd()): Promise<DoctorRepo
     };
   }
 
+  if (await transactionPending(root)) return {
+    root, status: "Needs Review", checks: [...checks, { label: "Approval transaction", ok: false, detail: APPROVAL_JOURNAL }],
+    nextAction: "Unfinished update detected. Review the journal, then control-plane recover --complete or --rollback. See stale-lock recovery instructions.", hasErrors: false
+  };
+
   let bootstrapState: ResolvedBootstrapState;
   try {
     bootstrapState = await readBootstrapState(root);
@@ -168,6 +162,16 @@ export async function doctorProject(rootDir = process.cwd()): Promise<DoctorRepo
       nextAction: `Repair or migrate the invalid Bootstrap state (${detail}).`,
       hasErrors: true
     };
+  }
+
+  if (await transactionPending(root)) return { root, status: "Needs Review", checks, nextAction: "Unfinished update: control-plane recover --complete or --rollback.", hasErrors: false };
+  let adrChecks: AdrCheck[] = [];
+  if (bootstrapState.definition.adr) {
+    try { adrChecks = await inspectAdrs(root, bootstrapState); }
+    catch (error) { adrChecks = [{ number: "", file: bootstrapState.definition.adr.directory, title: "ADR directory", valid: false, detail: error instanceof Error ? error.message : String(error) }]; }
+    for (const adr of adrChecks) checks.push({ label: `ADR decision: ${adr.file}`, ok: adr.valid, detail: adr.detail });
+    const needsReview = adrChecks.filter(adr => !adr.valid && adr.status !== "Proposed");
+    if (needsReview.length) return { root, status: "Needs Review", checks, bootstrapState, adrChecks, nextAction: needsReview.map(adr => `${adr.file}: ${adr.detail}`).join("\n"), hasErrors: false };
   }
 
   const incompleteDocs: string[] = [];
@@ -191,7 +195,7 @@ export async function doctorProject(rootDir = process.cwd()): Promise<DoctorRepo
       checks,
       nextAction: "Complete Product / Requirements / Constraints / Delivery using agent/workflows/bootstrap.md.",
       hasErrors: false,
-      bootstrapState
+      bootstrapState, adrChecks
     };
   }
 
@@ -228,7 +232,8 @@ export async function doctorProject(rootDir = process.cwd()): Promise<DoctorRepo
     };
   }
 
-  const proposed = await proposedAdrs(root);
+  if (bootstrapState.definition.schemaVersion === 1) return { root, status: "Needs Review", checks, bootstrapState, adrChecks, nextAction: "Legacy approval schema: run control-plane migrate; then explicitly migrate existing Accepted / Superseded ADRs. Existing item IDs are preserved.", hasErrors: false };
+  const proposed = adrChecks.filter(adr => adr.status === "Proposed").map(adr => adr.file);
   const architecture = (await readText(root, "ARCHITECTURE.md")) ?? "";
   const architecturePending =
     architecture.includes("Bootstrap / Architecture Gate後に記載する。") ||
@@ -245,25 +250,14 @@ export async function doctorProject(rootDir = process.cwd()): Promise<DoctorRepo
     detail: architecturePending ? "Architecture Gate/current architecture has not been resolved" : undefined
   });
 
-  if (proposed.length > 0 && architecturePending) {
+  if (proposed.length > 0) {
     return {
       root,
       status: "Architecture Gate Pending",
       checks,
       nextAction: `Review the Proposed ADRs (${proposed.join(", ")}) and update ARCHITECTURE.md only after approval.`,
       hasErrors: false,
-      bootstrapState
-    };
-  }
-
-  if (proposed.length > 0) {
-    return {
-      root,
-      status: "Needs Review",
-      checks,
-      nextAction: "Review Proposed ADRs and ARCHITECTURE.md. The repository state is not safe to classify automatically.",
-      hasErrors: false,
-      bootstrapState
+      bootstrapState, adrChecks
     };
   }
 

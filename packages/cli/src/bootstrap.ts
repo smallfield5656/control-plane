@@ -12,6 +12,7 @@ export type BootstrapPhase =
 
 export type BootstrapItemStatus = "Complete" | "Pending" | "Needs Review";
 export type BootstrapNextStep =
+  | "Approval Pending"
   | "Setup Recovery"
   | "Product Definition"
   | "Delivery Framing"
@@ -33,6 +34,7 @@ export interface BootstrapStateItem {
 export interface BootstrapAdr {
   file: string;
   title: string;
+  number?: string;
 }
 
 export interface BootstrapHumanGate {
@@ -54,6 +56,7 @@ export interface BootstrapReport {
   suggestedInstruction?: string;
   nextAction: string;
   hasErrors: boolean;
+  approvalCommands?: { id: string; label: string; files: string[]; command: string }[];
 }
 
 function checkOk(report: DoctorReport, label: string): boolean {
@@ -101,14 +104,7 @@ async function proposedAdrs(root: string): Promise<BootstrapAdr[]> {
 
 function productState(report: DoctorReport): BootstrapStateItem[] {
   if (!report.bootstrapState) {
-    return ["Product Goal", "Requirements", "Constraints", "Delivery", "Architecture"].map((label) => ({
-      id: label.toLowerCase().replaceAll(" ", "-"),
-      label,
-      status: "Pending",
-      detail: "Bootstrap state is unavailable",
-      stage: "Setup Recovery",
-      inputs: []
-    }));
+    return [];
   }
 
   return report.bootstrapState.items.map((item) => {
@@ -153,7 +149,7 @@ function guidance(report: DoctorReport, phase: BootstrapPhase, state: BootstrapS
       suggestedInstruction:
         "AGENTS.md と agent/workflows/bootstrap.md を読んでください。\n" +
         "Needs Reviewの項目について、承認時点からの変更と下流影響を説明してください。\n" +
-        "人間が明示的に再承認した場合だけ、Project Bootstrap Skillのrecord-approval adapterで承認stateを更新してください。"
+        "人間が明示的に再承認した場合だけ、Approval TargetsのCLI操作で承認stateを更新してください。"
     };
   }
   if (phase === "Bootstrap Complete") {
@@ -172,6 +168,11 @@ function guidance(report: DoctorReport, phase: BootstrapPhase, state: BootstrapS
   }
 
   const pendingPreparation = state.find((item) => item.stage !== "Architecture" && item.status !== "Complete");
+  const prepared = report.bootstrapState?.items.find(item => item.id === pendingPreparation?.id);
+  if (prepared?.ready && report.bootstrapState?.definition.schemaVersion === 2) return {
+    nextStep: "Approval Pending", workOn: prepared.directInputs,
+    goal: `${prepared.label}の文書内容を確認し、人間が control-plane approve ${prepared.id} で現在の内容を承認してください。`
+  };
   if (pendingPreparation?.stage === "Product Definition") {
     const pendingProduct = state
       .filter((item) => item.stage === pendingPreparation.stage && item.status !== "Complete")
@@ -179,7 +180,7 @@ function guidance(report: DoctorReport, phase: BootstrapPhase, state: BootstrapS
     return {
       nextStep: "Product Definition",
       workOn: [...pendingProduct],
-      goal: "Product Goalと主要Requirements / Acceptance Criteria、必要なConstraintsを定義してください。",
+      goal: "Product Overviewと主要Requirements / Acceptance Criteria、必要なConstraintsを定義してください。",
       suggestedInstruction:
         `AGENTS.md と agent/workflows/bootstrap.md を読んでください。\n` +
         `私と壁打ちしながらProduct Definitionを進め、${formatFileList([...pendingProduct])} を更新してください。\n` +
@@ -197,7 +198,7 @@ function guidance(report: DoctorReport, phase: BootstrapPhase, state: BootstrapS
       goal: "Scope / Estimate / Risks / Milestonesを必要な粒度で整理してください。",
       suggestedInstruction:
         `AGENTS.md と agent/workflows/bootstrap.md を読んでください。\n` +
-        `Product Goal、Requirements、Constraintsを前提として、${formatFileList([...pendingDelivery])} を整理してください。\n` +
+        `Product Overview、Requirements、Constraintsを前提として、${formatFileList([...pendingDelivery])} を整理してください。\n` +
         "ArchitectureやTechnologyの選定にはまだ進まないでください。"
     };
   }
@@ -223,7 +224,7 @@ function guidance(report: DoctorReport, phase: BootstrapPhase, state: BootstrapS
       suggestedInstruction:
         "AGENTS.md と agent/workflows/bootstrap.md を読んでください。\n" +
         "Architecture DecisionとARCHITECTURE.mdの整合を確認してください。\n" +
-        "人間が明示的に承認した場合だけ、Project Bootstrap Skillのrecord-approval adapterでarchitecture項目を更新してください。"
+        "人間が明示的に承認した場合だけ、Approval TargetsのCLI操作でArchitecture項目を更新してください。"
     };
   }
 
@@ -256,7 +257,7 @@ function nextAction(phase: BootstrapPhase, proposed: BootstrapAdr[], nextStep: B
 
 export async function bootstrapProject(rootDir = process.cwd()): Promise<BootstrapReport> {
   const report = await doctorProject(rootDir);
-  const proposed = await proposedAdrs(report.root);
+  const proposed = report.adrChecks ? report.adrChecks.filter(adr => adr.status === "Proposed").map(adr => ({ number: adr.number, file: adr.file, title: adr.title })) : await proposedAdrs(report.root);
   const phase: BootstrapPhase = report.status === "Ready for Validation" ? "Bootstrap Complete" : report.status;
 
   const architectureGate = phase === "Architecture Gate Pending" ? "Pending" : "None";
@@ -274,7 +275,8 @@ export async function bootstrapProject(rootDir = process.cwd()): Promise<Bootstr
     reviewInputs,
     humanGate: architectureGate === "Pending" ? { type: "Architecture Gate", adrs: proposed } : undefined,
     ...stepGuidance,
-    nextAction: nextAction(phase, proposed, stepGuidance.nextStep),
+    nextAction: phase === "Needs Review" || phase === "Setup Incomplete" ? report.nextAction : nextAction(phase, proposed, stepGuidance.nextStep),
+    approvalCommands: report.bootstrapState?.items.filter(item => item.status !== "Complete").map(item => ({ id: item.id, label: item.label, files: item.directInputs, command: report.bootstrapState!.definition.schemaVersion === 2 ? `control-plane approve ${item.id}` : "control-plane migrate" })),
     hasErrors: report.hasErrors
   };
 }
@@ -286,6 +288,10 @@ export function formatBootstrapReport(report: BootstrapReport, styles: OutputSty
   }
 
   lines.push("", `Architecture Gate: ${styles.status(report.architectureGate)}`);
+  if (report.approvalCommands?.length) {
+    lines.push("", styles.heading("Approval Targets:"));
+    for (const item of report.approvalCommands) lines.push(`  ${item.label} (${item.id})`, `    Targets: ${item.files.join(", ")}`, `    Command: ${item.command}`);
+  }
 
   if (report.humanGate && report.humanGate.adrs.length > 0) {
     lines.push("", styles.heading("Review Inputs:"));
@@ -302,6 +308,7 @@ export function formatBootstrapReport(report: BootstrapReport, styles: OutputSty
     lines.push("", styles.heading("Decision:"));
     for (const adr of report.humanGate.adrs) {
       lines.push(`  ${adr.file}`);
+      if (adr.number) lines.push(`  control-plane approve adr ${adr.number}`, `  control-plane reject adr ${adr.number} --reason "<理由>"`);
     }
   } else {
     lines.push("  None");

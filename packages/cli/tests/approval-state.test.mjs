@@ -197,7 +197,7 @@ test("unsafe approval input paths are rejected conservatively", async (t) => {
   assert.match(report.nextAction, /invalid Bootstrap state/i);
 });
 
-test("the Agent adapter records explicit approval including architecture ADR inputs", async (t) => {
+test("legacy approval migration preserves explicit upstream records and includes individual ADR inputs", async (t) => {
   const { root, project } = await fixture();
   t.after(() => rm(root, { recursive: true, force: true }));
   await completeDocs(project);
@@ -205,11 +205,12 @@ test("the Agent adapter records explicit approval including architecture ADR inp
   await writeFile(path.join(project, "ARCHITECTURE.md"), "# Architecture\n\n## Technology Stack\nNode.js.\n");
   await writeFile(
     path.join(project, "docs/architecture/adr/0001-runtime.md"),
-    "# ADR-0001: Runtime\n\n- Status: Accepted\n\n## Decision\nUse Node.js.\n"
+    "# ADR-0001: Runtime\n\n- Status: Accepted\n\n## Context\nChoose runtime.\n\n## Decision\nUse Node.js.\n\n## Consequences\nNode.js required.\n"
   );
-  const script = path.join(project, ".agents/skills/project-bootstrap/scripts/record-approval.mjs");
-
-  execFileSync(process.execPath, [script, "architecture"], { cwd: project, stdio: "pipe" });
+  const script = path.join(packageDir, "dist/index.js");
+  for (const args of [["migrate"], ["migrate", "adr", "0001"], ["approve", "architecture"]]) {
+    execFileSync(process.execPath, [script, ...args], { cwd: project, stdio: "pipe" });
+  }
 
   const state = JSON.parse(await readFile(path.join(project, stateRelative), "utf8"));
   const files = state.items.find((item) => item.id === "architecture").approval.files;

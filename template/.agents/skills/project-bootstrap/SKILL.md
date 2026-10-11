@@ -56,14 +56,15 @@ Bootstrapの項目、input、dependency、現在の承認は `.control-plane/boo
 人間が対象項目を明示的に承認した場合だけ、Repository rootから次を実行する。
 
 ```bash
-node .agents/skills/project-bootstrap/scripts/record-approval.mjs <item-id>
+control-plane approve <item-id>
 ```
 
-標準item IDは `product-goal`、`requirements`、`constraints`、`delivery`、`architecture`。
+item IDと対象はProjectのstateと `control-plane next` の案内に従う。既存ProjectのIDを推測で変更しない。ADRの承認・却下・置き換えは `docs/architecture/adr/README.md` を参照する。
 
 - 無言、会話終了、修正がなくなったこと、Agent自身の品質判断を承認と解釈しない。
 - 実行前に承認対象と現在のinputを人間へ明示する。
-- Adapterは対象と上流dependencyのrevisionを記録する。承認後に内容が変わると `control-plane next` は `Needs Review` を返す。
+- 共通CLIは対象と上流dependencyのrevisionを記録する。承認後に内容が変わると `control-plane next` は `Needs Review` を返す。旧record-approval adapterは同じCLIへ委譲する。
+- 承認JSONやADRの採用Statusを直接編集してGuardを迂回しない。人間が直接CLIを使う場合と同じ検証・排他・復旧処理を通す。
 - `TODO` placeholderが残る場合は承認を記録しない。
 - 差し戻し時は必要なSSOTを更新し、Approval historyや議事録をstate fileへ追加しない。
 

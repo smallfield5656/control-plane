@@ -50,6 +50,11 @@ ADR-0001からADR-0005までのArchitecture Gateを通過し、生成先Template
 - `control-plane next [directory]`
 - `control-plane bootstrap [directory]` — `next` の後方互換Alias
 - `control-plane check [directory]`
+- `control-plane approve <item-id>` / `approve adr <number>`
+- `control-plane reject adr <number> --reason "<理由>"`
+- `control-plane migrate [adr <number>]`
+- `control-plane recover --complete | --rollback`
+- `control-plane completion <bash|powershell>`
 
 `next` はRepository状態から次のActionを決定論的に案内する主コマンドであり、Bootstrap中だけでなくBootstrap Complete後のOngoing Developmentへの導線も持つ。
 
@@ -72,6 +77,12 @@ ADR-0001からADR-0005までのArchitecture Gateを通過し、生成先Template
 - `packages/cli/src/bootstrap.ts`: Repository状態からNext Step / Human Gate / Suggested Instructionを導出
 - `packages/cli/src/check.ts`: 既存Validation Entry Pointの選択と実行
 - `packages/cli/src/index.ts`: CLI command routing
+- `packages/cli/src/commands.ts`: 引数検証・help・静的補完が共用する構文定義
+- `packages/cli/src/bootstrap-state.ts`: schema v1 / v2、Project definition、scope・dependency・revisionの共通検証
+- `packages/cli/src/adr.ts`: 番号解決・Status・本文/lifecycle照合と置き換え関係の検証
+- `packages/cli/src/approval.ts`: 明示判断と移行操作
+- `packages/cli/src/approval-transaction.ts`: 排他・複数file更新・未完了検出・明示復旧
+- `packages/cli/src/completion.ts` / `packages/cli/completion/`: 共通候補取得とshell adapter
 - `packages/cli/src/output.ts`: 共通の色・TTY / environment判定。Node.js標準APIだけを使い、診断・Workflow logicから分離する。
 - `scripts/check.*`: control-plane productのValidation Entry Point
 - `scripts/check-project.*`: CLI + Template固有Validation
@@ -86,14 +97,14 @@ Product / Architecture / Workflow / Validation contract
                          ↓
                      template/
                          ↓
-          CLI init / doctor / next / check
+           CLI Project操作・診断・補完
                          ↓
                   Generated Project
 ```
 
 CLIへTemplate本文、Workflow truth、Validation logicを重複してhard-codeしない。
 
-Bootstrapの項目、input、順序、dependency、現在の承認状態は生成Projectの `.control-plane/bootstrap-state.json` を機械可読なSSOTとする。CLIはschemaと安全な解釈だけを保持し、項目ごとの承認状態をcodeへ固定しない。設計理由はADR-0006を参照する。
+Bootstrapの項目、input、順序、dependency、現在の承認状態とADRの上流宣言・照合情報は生成Projectの `.control-plane/bootstrap-state.json` を機械可読なSSOTとする。CLIはschemaと安全な解釈だけを保持し、項目ごとの知識をcodeへ固定しない。現行の判断記録・移行・更新境界はADR-0007、shell接続はADR-0008を参照する。
 
 標準Agent Skillは `.agents/skills/` に置き、Control Plane固有Workflowは `agent/workflows/` に置く。SkillはWorkflowやDurable Truthを複製せず、それらを実行するAdapterとして扱う。
 
@@ -129,7 +140,7 @@ Validationは実行せず、成功を推測しない。
 
 `control-plane next [directory]` は対象Repositoryをread-onlyで確認し、状態に応じて `Next Step` / `Work On` / `Goal` / `Suggested Instruction` / `Human Gate` を提示する。
 
-Placeholderがないことだけでは完了とせず、人間の明示的な承認がCurrent Stateへ記録され、対象と上流inputのrevisionが一致する場合だけ項目を `Complete` とする。AI Agentは人間の明示的な承認を受けた場合にProject Bootstrap Skillのadapterでstateを更新する。
+Placeholderがないことだけでは完了とせず、人間の明示的な承認がCurrent Stateへ記録され、対象と上流inputのrevisionが一致する場合だけ項目を `Complete` とする。人間と、人間から対象を特定した指示を受けたAIは、同じ承認CLIを使う。nextは対象label・fileと有効なコマンドを案内する。
 
 Bootstrap Complete後は `Ongoing Development` を案内し、GitHub IssueをChange Intakeとして `agent/workflows/issue.md` へ橋渡しする。
 
@@ -146,6 +157,16 @@ CLI自身はIssueを作成せず、Issue番号や変更内容を推測しない�
 - exit codeを呼び出し元へ伝播
 
 生成ProjectのValidation contractは引き続き `scripts/check.*` がSource of Truth。
+
+### approve / reject / migrate / recover
+
+Project rootで明示された対象を検証し、共通lockの取得後にstateを読み直す。判断記録はschema v2を使い、v1の更新にはmigrateを要求する。通常itemのhash、ADR本文のhash、限定lifecycleを除いたdecision hashを共通処理で扱う。
+
+更新は対象bytesの変更前後をjournalへ保存してからtemporary file / renameで行う。未完了journalは診断でNeeds Reviewとなり、新しい判断を書き込まない。復旧は指定方向への明示操作で、全対象が保存した変更前後の内容に一致する場合だけ行う。第三の内容や不正pathでは上書きしない。
+
+### completion
+
+配布されたBash / PowerShell assetはCLIの共通候補取得を呼ぶ。静的候補はコマンドregistry、item IDはstate、ADR番号は共通resolverから取得する。候補取得はread-onlyであり、Project操作をdispatchしない。引用・空白path・標準directory補完との接続はshell adapterが担う。
 
 ## External Dependencies
 
@@ -166,4 +187,5 @@ Core Template contractは特定のHosted serviceやAI vendorを必須としな�
 - ADR-0003: `docs/architecture/adr/0003-standard-agent-skills-path.md`
 - ADR-0004: `docs/architecture/adr/0004-tracked-template-distribution.md`
 - ADR-0005: `docs/architecture/adr/0005-separate-product-examples-from-generated-projects.md`
-- ADR-0006: `docs/architecture/adr/0006-explicit-bootstrap-approval-state.md`
+- ADR-0007: `docs/architecture/adr/0007-cli-decisions-and-recoverable-updates.md`（ADR-0006の承認記録の責務を置き換える）
+- ADR-0008: `docs/architecture/adr/0008-shared-shell-completion.md`

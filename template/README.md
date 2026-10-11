@@ -6,8 +6,8 @@
 
 1. `AGENTS.md` をAI agentの入口として使う。
 2. `agent/workflows/bootstrap.md` に従ってProduct Goal / Requirements / Constraints / Deliveryを整理する。
-3. 人間がProduct / Delivery項目を明示的に承認した場合だけ、Project Bootstrap Skillのadapterで `.control-plane/bootstrap-state.json` へ現在revisionを記録する。
-4. 重要なArchitecture decisionはADRを `Proposed` としてArchitecture Gateで承認し、同じadapterでArchitecture項目を記録する。
+3. 人間がProduct / Delivery項目を確認し、`control-plane next` が案内するapproveコマンドで現在revisionを記録する。AIに明示承認を伝える場合も同じCLIを使う。
+4. 重要なArchitecture decisionはADRを `Proposed` として準備し、人間がCLIで採用・却下を記録する。AIがCurrent Architectureへ反映した後、人間がArchitecture項目を別途確認・承認する。操作の正本は `docs/architecture/adr/README.md`。
 5. 承認後にScaffoldし、`scripts/check.*` を共通Validation Entry Pointとして使う。
 
 Bootstrap後、このREADMEはProject固有のPurpose / Setup / Run / Validationへの入口へ置き換えてください。
