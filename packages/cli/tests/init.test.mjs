@@ -75,6 +75,15 @@ test("estimate template separates AI elapsed time, human involvement, and human-
   assert.match(estimate, /単純合算しない/);
 });
 
+test("requirements template is current truth rather than a versioned history", async () => {
+  const requirements = await readFile(path.join(repoRoot, "template/docs/product/requirements.md"), "utf8");
+
+  assert.match(requirements, /Current Truth/);
+  assert.match(requirements, /現在有効な要求/);
+  assert.match(requirements, /Git.*Issue.*Pull Request/);
+  assert.match(requirements, /Requirement ID.*安定/);
+});
+
 test("issue workflow preserves accepted ADR history when a decision changes", async () => {
   const issueWorkflow = await readFile(path.join(repoRoot, "template/agent/workflows/issue.md"), "utf8");
 
