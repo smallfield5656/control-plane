@@ -106,7 +106,11 @@ v0.1.0の初期CLIは `init / doctor / check` に限定し、必要性が未実�
 - [ ] `control-plane bootstrap [directory]` はRepositoryを変更しない。
 - [ ] Product Goal / Requirements / Constraints / Delivery / Architectureの進捗を表示する。
 - [ ] Proposed ADRがArchitecture Gate待ちなら、対象ADRをHuman Gateとして表示する。
+- [ ] Human Gateでは、Decisionの判断材料となる主要なRepository SSOTを `Review Inputs` として表示する。
+- [ ] Human Gateでは、承認対象となるADRのRepository pathを `Decision` として表示する。
+- [ ] Approvalはfile-orientedではなくdecision-orientedに扱い、Product / Delivery文書自体へ承認状態を追加しない。
 - [ ] Human Gateの承認・却下をCLI自身は実行しない。
+- [ ] 専用の承認ログをCLIやTemplateへ追加しない。監査等で必要な場合のみProject固有要件として導入する。
 - [ ] 同じRepository状態から同じ判定と固定メッセージを返し、AI APIを利用しない。
 - [ ] 短い英語ラベルと日本語説明を組み合わせて次Actionを表示する。
 
@@ -115,5 +119,6 @@ v0.1.0の初期CLIは `init / doctor / check` に限定し、必要性が未実�
 - Repositoryの自動更新
 - ADRの自動承認・却下
 - AI/LLMによる文面生成
+- Approval history管理
 - `status` command
 - `--lang` / `--json`
