@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { cp, mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -34,6 +35,14 @@ async function completeBootstrapDocs(project) {
   await writeFile(path.join(project, "docs/delivery/estimate.md"), "# Estimate\n\n## Confidence\nMedium.\n");
   await writeFile(path.join(project, "docs/delivery/risks.md"), "# Risks\n\n## Risk Register\nNo major risks.\n");
   await writeFile(path.join(project, "docs/delivery/milestones.md"), "# Milestones\n\n## Milestone Plan\nMVP.\n");
+  approve(project, ["product-goal", "requirements", "constraints", "delivery"]);
+}
+
+function approve(project, items) {
+  const script = path.join(project, ".agents/skills/project-bootstrap/scripts/record-approval.mjs");
+  for (const item of items) {
+    execFileSync(process.execPath, [script, item], { cwd: project, stdio: "pipe" });
+  }
 }
 
 test("doctor reports Setup Incomplete when required assets are missing", async () => {
@@ -85,6 +94,7 @@ test("doctor reports Ready for Validation only after bootstrap documents, archit
     path.join(project, "README.md"),
     "# Example Project\n\n## Purpose\nExample.\n\n## Validation\nRun scripts/check.sh.\n"
   );
+  approve(project, ["architecture"]);
 
   const report = await doctorProject(project);
 

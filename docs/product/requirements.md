@@ -39,7 +39,11 @@
 - [ ] Bootstrap Preparation / Architecture Gate Pending / Bootstrap Complete等、Repositoryから安全に判定できる状態を表示する。
 - [ ] 不足項目を人間向けに説明し、次Actionを提示する。
 - [ ] 判定できない状態を推測で確定しない。
-- [ ] 独立した `TODO` / `TODO:` は未完了として検出し、`TODOList` / `MY_TODO` 等の識別子は検出しない。境界はASCII英数字・underscore以外とする。
+- [ ] Bootstrapの進捗は、Repository上のmachine-readableなCurrent Stateに記録された明示的人間承認を主条件として判定する。
+- [ ] 独立した `TODO` / `TODO:` は承認準備未完了として検出し、`TODOList` / `MY_TODO` 等の識別子は検出しない。境界はASCII英数字・underscore以外とする。
+- [ ] Placeholderがないことだけで項目を `Complete` にしない。
+- [ ] 承認時点の対象inputと現在内容のrevisionが一致する場合だけ `Complete` とする。
+- [ ] 承認後に対象inputまたは上流dependencyが変更された項目は `Needs Review` とする。
 - [ ] 新規生成直後の `next` は全5項目を `Pending` とし、Constraintsも `Work On` と依頼文へ含める。
 - [ ] Shell / PowerShellのplaceholder検証も同じ大小文字・境界のルールを使う。
 
@@ -121,15 +125,18 @@ CLIは `init / doctor / next / check` と `bootstrap` 互換Aliasに限定し、
 - [ ] Proposed ADRがArchitecture Gate待ちなら、対象ADRをHuman Gateとして表示する。
 - [ ] Human Gateでは、Decisionの判断材料となる主要なRepository SSOTを `Review Inputs` として表示する。
 - [ ] Human Gateでは、承認対象となるADRのRepository pathを `Decision` として表示し、`Suggested Instruction` より人間の判断を優先する。
-- [ ] Approvalはfile-orientedではなくdecision-orientedに扱い、Product / Delivery文書自体へ承認状態を追加しない。
+- [ ] Approvalは表示項目またはDecision Gate単位で扱い、対象fileは承認時点のinput fingerprintとして紐づける。
+- [ ] Product / Delivery文書本文へ承認metadataを追加せず、Bootstrap Current Stateを承認状態のSSOTとする。
 - [ ] Human Gateの承認・却下をCLI自身は実行しない。
-- [ ] 専用の承認ログをCLIやTemplateへ追加しない。監査等で必要な場合のみProject固有要件として導入する。
+- [ ] AI Agentは人間の明示的な承認を受けた場合だけBootstrap Current Stateを更新し、無言・会話終了・Agent自身の品質判断を承認と解釈しない。
+- [ ] Bootstrap Current Stateは現在状態だけを保持し、Approval historyや議事録を保持しない。変更履歴はGitへ委ねる。
+- [ ] `next` と `doctor` はBootstrap Current Stateをread-onlyで検証し、Repositoryを変更しない。
 - [ ] 同じRepository状態から同じ判定と固定メッセージを返し、AI APIを利用しない。
 - [ ] 短い英語ラベルと日本語説明を組み合わせる。
 
 **Out of Scope**
 
-- Repositoryの自動更新
+- `next` / `doctor` によるRepositoryの自動更新
 - ADRの自動承認・却下
 - AI/LLMによる文面生成
 - Approval history管理

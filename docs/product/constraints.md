@@ -29,7 +29,7 @@
 
 - 主な入力はRepository structure、Markdown、ADR、Script等のlocal files。
 - 初期CLIで独自databaseを導入しない。
-- Machine-readable configは必要性が実証されるまで必須化しない。
+- Machine-readable configは必要性が実証されるまで必須化しない。Bootstrapの明示的な承認状態とrevision検証には、versionedなlocal Current Stateを利用できる。
 
 ## Operations
 
@@ -50,5 +50,5 @@
 
 ## Project Stage
 
-- 現在は公開済みCLIのMaintenance phase。今回のpatchはTemplate配布の完全性とRepository hygieneを改善する。
+- 現在は公開済みCLIのFeature maintenance phase。今回のminor releaseはBootstrap進行をplaceholder推定から明示的人間承認とrevision検証へ変更する。
 - 未実証の追加機能を先行導入しない。

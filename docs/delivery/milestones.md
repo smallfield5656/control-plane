@@ -16,6 +16,7 @@
 | M8 | Windows / Linux CI | CI Gate | After M7 | Maintainer | Completed |
 | M9 | Third-party Quick Start / clean-environment dogfood | Usability Gate | After M8 | Maintainer / Tester | Completed |
 | M10 | v0.1.0 publish / GitHub Release | Release Gate | After M9 | Maintainer / Approver | Completed |
+| M11 | 明示的人間承認によるBootstrap進行をnpm / GitHub Releaseへ公開 | Architecture / Release Gate | After Issue #26 review | Maintainer / Approver | In Progress |
 
 ## Current Progress
 
@@ -24,6 +25,7 @@
 - `0.2.4` ではControl Plane製品の完成例を生成Projectから分離し、Project固有の文脈だけを配置する変更を公開した。
 - Local validation、Windows / Linux CI、Review、npm publish、GitHub Release、公開artifactのGolden Path確認が成功し、`0.2.4` Release Gateは完了した。
 - Template assetはroot `template/` が唯一の正本。具体的なbuild / distribution境界は `ARCHITECTURE.md`、公開手順は `docs/operations/release.md` を参照する。
+- Issue #26では、placeholder推定から明示的人間承認とrevision検証へBootstrap進行contractを変更し、npm packageとGitHub ReleaseまでをM11の完了条件とする。
 
 ## Rules
 

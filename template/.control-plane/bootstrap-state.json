@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "revisionAlgorithm": "sha256-text-lf-v1",
+  "items": [
+    {
+      "id": "product-goal",
+      "label": "Product Goal",
+      "stage": "Product Definition",
+      "inputs": [
+        "docs/product/overview.md"
+      ],
+      "inputDirectories": [],
+      "dependsOn": [],
+      "approval": null
+    },
+    {
+      "id": "requirements",
+      "label": "Requirements",
+      "stage": "Product Definition",
+      "inputs": [
+        "docs/product/requirements.md"
+      ],
+      "inputDirectories": [],
+      "dependsOn": [
+        "product-goal"
+      ],
+      "approval": null
+    },
+    {
+      "id": "constraints",
+      "label": "Constraints",
+      "stage": "Product Definition",
+      "inputs": [
+        "docs/product/constraints.md"
+      ],
+      "inputDirectories": [],
+      "dependsOn": [
+        "requirements"
+      ],
+      "approval": null
+    },
+    {
+      "id": "delivery",
+      "label": "Delivery",
+      "stage": "Delivery Framing",
+      "inputs": [
+        "docs/delivery/charter.md",
+        "docs/delivery/estimate.md",
+        "docs/delivery/risks.md",
+        "docs/delivery/milestones.md"
+      ],
+      "inputDirectories": [],
+      "dependsOn": [
+        "constraints"
+      ],
+      "approval": null
+    },
+    {
+      "id": "architecture",
+      "label": "Architecture",
+      "stage": "Architecture",
+      "inputs": [
+        "ARCHITECTURE.md"
+      ],
+      "inputDirectories": [
+        {
+          "path": "docs/architecture/adr",
+          "extension": ".md",
+          "exclude": [
+            "0000-template.md",
+            "README.md"
+          ]
+        }
+      ],
+      "dependsOn": [
+        "delivery"
+      ],
+      "approval": null
+    }
+  ]
+}

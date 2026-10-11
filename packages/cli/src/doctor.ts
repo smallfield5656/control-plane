@@ -1,5 +1,11 @@
 import { access, readdir, readFile } from "node:fs/promises";
 import path from "node:path";
+import {
+  BOOTSTRAP_STATE_FILE,
+  BootstrapStateError,
+  readBootstrapState,
+  type ResolvedBootstrapState
+} from "./bootstrap-state.js";
 import { plainStyles, type OutputStyles } from "./output.js";
 
 export type DoctorStatus =
@@ -21,12 +27,14 @@ export interface DoctorReport {
   checks: DoctorCheck[];
   nextAction: string;
   hasErrors: boolean;
+  bootstrapState?: ResolvedBootstrapState;
 }
 
 const REQUIRED_FILES = [
   "AGENTS.md",
   "ARCHITECTURE.md",
   "README.md",
+  BOOTSTRAP_STATE_FILE,
   "docs/product/overview.md",
   "docs/product/requirements.md",
   "docs/product/constraints.md",
@@ -137,7 +145,27 @@ export async function doctorProject(rootDir = process.cwd()): Promise<DoctorRepo
       root,
       status: "Setup Incomplete",
       checks,
-      nextAction: `Restore the missing Control Plane assets (${missing.join(", ")}) or initialize a fresh project.`,
+      nextAction: `Restore or migrate the missing Control Plane assets (${missing.join(", ")}) or initialize a fresh project.`,
+      hasErrors: true
+    };
+  }
+
+  let bootstrapState: ResolvedBootstrapState;
+  try {
+    bootstrapState = await readBootstrapState(root);
+    const architectureItems = bootstrapState.items.filter((item) => item.stage === "Architecture");
+    if (architectureItems.length !== 1) {
+      throw new BootstrapStateError("exactly one Architecture item is required");
+    }
+    checks.push({ label: "Bootstrap state", ok: true, detail: BOOTSTRAP_STATE_FILE });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    checks.push({ label: "Bootstrap state", ok: false, detail });
+    return {
+      root,
+      status: "Setup Incomplete",
+      checks,
+      nextAction: `Repair or migrate the invalid Bootstrap state (${detail}).`,
       hasErrors: true
     };
   }
@@ -162,7 +190,41 @@ export async function doctorProject(rootDir = process.cwd()): Promise<DoctorRepo
       status: "Bootstrap In Progress",
       checks,
       nextAction: "Complete Product / Requirements / Constraints / Delivery using agent/workflows/bootstrap.md.",
-      hasErrors: false
+      hasErrors: false,
+      bootstrapState
+    };
+  }
+
+  const preparationItems = bootstrapState.items.filter((item) => item.stage !== "Architecture");
+  for (const item of preparationItems) {
+    checks.push({
+      label: `Approval: ${item.label}`,
+      ok: item.status === "Complete",
+      detail: item.detail
+    });
+  }
+
+  const stalePreparation = preparationItems.filter((item) => item.status === "Needs Review");
+  if (stalePreparation.length > 0) {
+    return {
+      root,
+      status: "Needs Review",
+      checks,
+      nextAction: `Review and explicitly re-approve changed Bootstrap items (${stalePreparation.map((item) => item.label).join(", ")}).`,
+      hasErrors: false,
+      bootstrapState
+    };
+  }
+
+  const pendingPreparation = preparationItems.filter((item) => item.status === "Pending");
+  if (pendingPreparation.length > 0) {
+    return {
+      root,
+      status: "Bootstrap In Progress",
+      checks,
+      nextAction: `Obtain explicit human approval for the prepared Bootstrap items (${pendingPreparation.map((item) => item.label).join(", ")}).`,
+      hasErrors: false,
+      bootstrapState
     };
   }
 
@@ -189,17 +251,50 @@ export async function doctorProject(rootDir = process.cwd()): Promise<DoctorRepo
       status: "Architecture Gate Pending",
       checks,
       nextAction: `Review the Proposed ADRs (${proposed.join(", ")}) and update ARCHITECTURE.md only after approval.`,
-      hasErrors: false
+      hasErrors: false,
+      bootstrapState
     };
   }
 
-  if (proposed.length > 0 || architecturePending) {
+  if (proposed.length > 0) {
     return {
       root,
       status: "Needs Review",
       checks,
       nextAction: "Review Proposed ADRs and ARCHITECTURE.md. The repository state is not safe to classify automatically.",
-      hasErrors: false
+      hasErrors: false,
+      bootstrapState
+    };
+  }
+
+  if (architecturePending) {
+    return {
+      root,
+      status: "Bootstrap In Progress",
+      checks,
+      nextAction: "Prepare Architecture decisions from the approved Product and Delivery inputs.",
+      hasErrors: false,
+      bootstrapState
+    };
+  }
+
+  const architectureApproval = bootstrapState.items.find((item) => item.stage === "Architecture")!;
+  checks.push({
+    label: `Approval: ${architectureApproval.label}`,
+    ok: architectureApproval.status === "Complete",
+    detail: architectureApproval.detail
+  });
+  if (architectureApproval.status !== "Complete") {
+    return {
+      root,
+      status: architectureApproval.status === "Needs Review" ? "Needs Review" : "Bootstrap In Progress",
+      checks,
+      nextAction:
+        architectureApproval.status === "Needs Review"
+          ? "Review and explicitly re-approve the changed Architecture decision inputs."
+          : "Record explicit human approval for the resolved Architecture decision inputs.",
+      hasErrors: false,
+      bootstrapState
     };
   }
 
@@ -219,7 +314,8 @@ export async function doctorProject(rootDir = process.cwd()): Promise<DoctorRepo
       status: "Bootstrap In Progress",
       checks,
       nextAction: "Replace the root README with the project-specific Purpose / Setup / Run / Validation entry point.",
-      hasErrors: false
+      hasErrors: false,
+      bootstrapState
     };
   }
 
@@ -228,14 +324,15 @@ export async function doctorProject(rootDir = process.cwd()): Promise<DoctorRepo
     status: "Ready for Validation",
     checks,
     nextAction: "Run the repository validation entry point (scripts/check.*).",
-    hasErrors: false
+    hasErrors: false,
+    bootstrapState
   };
 }
 
 export function formatDoctorReport(report: DoctorReport, styles: OutputStyles = plainStyles): string {
   const lines = [styles.heading("Control Plane Doctor"), ""];
   for (const check of report.checks) {
-    const missing = check.detail === "missing" || check.label === "Validation entry point";
+    const missing = check.detail === "missing" || check.label === "Validation entry point" || check.label === "Bootstrap state";
     const marker = check.ok ? styles.success("✓") : missing ? styles.error("✗") : styles.warning("⚠");
     lines.push(`${marker} ${check.label}${check.detail ? ` — ${check.detail}` : ""}`);
   }

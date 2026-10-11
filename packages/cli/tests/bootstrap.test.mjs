@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { cp, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -42,6 +43,14 @@ async function completeDelivery(project) {
 async function completeBootstrapDocs(project) {
   await completeProductDefinition(project);
   await completeDelivery(project);
+  approve(project, ["product-goal", "requirements", "constraints", "delivery"]);
+}
+
+function approve(project, items) {
+  const script = path.join(project, ".agents/skills/project-bootstrap/scripts/record-approval.mjs");
+  for (const item of items) {
+    execFileSync(process.execPath, [script, item], { cwd: project, stdio: "pipe" });
+  }
 }
 
 test("bootstrap turns fresh project state into copyable Product Definition guidance", async () => {
@@ -70,6 +79,7 @@ test("bootstrap turns fresh project state into copyable Product Definition guida
 test("bootstrap moves to Delivery Framing and lists only incomplete delivery files", async () => {
   const { root, project } = await fixtureFromTemplate();
   await completeProductDefinition(project);
+  approve(project, ["product-goal", "requirements", "constraints"]);
   const { bootstrapProject, formatBootstrapReport } = await import(moduleUrl);
 
   const report = await bootstrapProject(project);
@@ -136,6 +146,7 @@ test("bootstrap guides finalization after architecture is resolved", async () =>
   const { root, project } = await fixtureFromTemplate();
   await completeBootstrapDocs(project);
   await writeFile(path.join(project, "ARCHITECTURE.md"), "# Architecture\n\n## Context\nCurrent architecture.\n\n## Technology Stack\nNode.js.\n");
+  approve(project, ["architecture"]);
   const { bootstrapProject, formatBootstrapReport } = await import(moduleUrl);
 
   const report = await bootstrapProject(project);
@@ -153,6 +164,7 @@ test("bootstrap bridges a completed project into issue-driven ongoing developmen
   const { root, project } = await fixtureFromTemplate();
   await completeBootstrapDocs(project);
   await writeFile(path.join(project, "ARCHITECTURE.md"), "# Architecture\n\n## Context\nCurrent architecture.\n\n## Technology Stack\nNode.js.\n");
+  approve(project, ["architecture"]);
   await writeFile(path.join(project, "README.md"), "# Example Project\n\n## Purpose\nExample.\n\n## Validation\nRun scripts/check.sh.\n");
   const { bootstrapProject, formatBootstrapReport } = await import(moduleUrl);
 

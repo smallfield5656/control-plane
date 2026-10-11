@@ -21,24 +21,13 @@ export type BootstrapNextStep =
   | "Bootstrap Finalization"
   | "Ongoing Development";
 
-const PRODUCT_FILES = [
-  "docs/product/overview.md",
-  "docs/product/requirements.md",
-  "docs/product/constraints.md"
-] as const;
-
-const DELIVERY_FILES = [
-  "docs/delivery/charter.md",
-  "docs/delivery/estimate.md",
-  "docs/delivery/risks.md",
-  "docs/delivery/milestones.md"
-] as const;
-
-const REVIEW_INPUTS = [...PRODUCT_FILES, ...DELIVERY_FILES] as const;
-
 export interface BootstrapStateItem {
-  label: "Product Goal" | "Requirements" | "Constraints" | "Delivery" | "Architecture";
+  id: string;
+  label: string;
   status: BootstrapItemStatus;
+  detail?: string;
+  stage: string;
+  inputs: string[];
 }
 
 export interface BootstrapAdr {
@@ -69,10 +58,6 @@ export interface BootstrapReport {
 
 function checkOk(report: DoctorReport, label: string): boolean {
   return report.checks.find((check) => check.label === label)?.ok ?? false;
-}
-
-function bootstrapDocOk(report: DoctorReport, relative: string): boolean {
-  return checkOk(report, `Bootstrap content: ${relative}`);
 }
 
 async function readText(root: string, relative: string): Promise<string | undefined> {
@@ -114,34 +99,45 @@ async function proposedAdrs(root: string): Promise<BootstrapAdr[]> {
   return result.sort((a, b) => a.file.localeCompare(b.file));
 }
 
-function productState(report: DoctorReport, phase: BootstrapPhase): BootstrapStateItem[] {
-  const setupIncomplete = report.status === "Setup Incomplete";
-  const productGoal = setupIncomplete ? false : bootstrapDocOk(report, "docs/product/overview.md");
-  const requirements = setupIncomplete ? false : bootstrapDocOk(report, "docs/product/requirements.md");
-  const constraints = setupIncomplete ? false : bootstrapDocOk(report, "docs/product/constraints.md");
-  const delivery = setupIncomplete ? false : DELIVERY_FILES.every((relative) => bootstrapDocOk(report, relative));
-
-  let architecture: BootstrapItemStatus = "Pending";
-  if (phase === "Bootstrap Complete" || (phase === "Bootstrap In Progress" && checkOk(report, "Current Architecture"))) {
-    architecture = "Complete";
-  } else if (phase === "Needs Review") {
-    architecture = "Needs Review";
+function productState(report: DoctorReport): BootstrapStateItem[] {
+  if (!report.bootstrapState) {
+    return ["Product Goal", "Requirements", "Constraints", "Delivery", "Architecture"].map((label) => ({
+      id: label.toLowerCase().replaceAll(" ", "-"),
+      label,
+      status: "Pending",
+      detail: "Bootstrap state is unavailable",
+      stage: "Setup Recovery",
+      inputs: []
+    }));
   }
 
-  return [
-    { label: "Product Goal", status: productGoal ? "Complete" : "Pending" },
-    { label: "Requirements", status: requirements ? "Complete" : "Pending" },
-    { label: "Constraints", status: constraints ? "Complete" : "Pending" },
-    { label: "Delivery", status: delivery ? "Complete" : "Pending" },
-    { label: "Architecture", status: architecture }
-  ];
+  return report.bootstrapState.items.map((item) => {
+    const unready = item.directInputs.some((relative) => {
+      const check = report.checks.find((candidate) => candidate.label === `Bootstrap content: ${relative}`);
+      return check ? !check.ok : false;
+    });
+    const architectureUnresolved = item.stage === "Architecture" && !checkOk(report, "Current Architecture");
+    return {
+      id: item.id,
+      label: item.label,
+      status: unready || architectureUnresolved ? "Pending" : item.status,
+      detail:
+        unready || architectureUnresolved
+          ? "content is not ready for approval"
+          : item.status === "Complete"
+            ? undefined
+            : item.detail,
+      stage: item.stage,
+      inputs: item.directInputs
+    };
+  });
 }
 
 function formatFileList(files: string[]): string {
   return files.join(" と ");
 }
 
-function guidance(report: DoctorReport, phase: BootstrapPhase): Pick<BootstrapReport, "nextStep" | "changeIntake" | "workOn" | "goal" | "suggestedInstruction"> {
+function guidance(report: DoctorReport, phase: BootstrapPhase, state: BootstrapStateItem[]): Pick<BootstrapReport, "nextStep" | "changeIntake" | "workOn" | "goal" | "suggestedInstruction"> {
   if (phase === "Setup Incomplete") {
     return { nextStep: "Setup Recovery", workOn: [] };
   }
@@ -149,7 +145,16 @@ function guidance(report: DoctorReport, phase: BootstrapPhase): Pick<BootstrapRe
     return { nextStep: "Architecture Gate", workOn: [] };
   }
   if (phase === "Needs Review") {
-    return { nextStep: "Needs Review", workOn: ["ARCHITECTURE.md", "docs/architecture/adr/"] };
+    const stale = state.filter((item) => item.status === "Needs Review");
+    return {
+      nextStep: "Needs Review",
+      workOn: [...new Set(stale.flatMap((item) => item.inputs))],
+      goal: "承認後に変更されたinputと影響する上流Decisionをレビューし、人間の明示的な再承認を得てください。",
+      suggestedInstruction:
+        "AGENTS.md と agent/workflows/bootstrap.md を読んでください。\n" +
+        "Needs Reviewの項目について、承認時点からの変更と下流影響を説明してください。\n" +
+        "人間が明示的に再承認した場合だけ、Project Bootstrap Skillのrecord-approval adapterで承認stateを更新してください。"
+    };
   }
   if (phase === "Bootstrap Complete") {
     return {
@@ -166,8 +171,11 @@ function guidance(report: DoctorReport, phase: BootstrapPhase): Pick<BootstrapRe
     };
   }
 
-  const pendingProduct = PRODUCT_FILES.filter((relative) => !bootstrapDocOk(report, relative));
-  if (pendingProduct.length > 0) {
+  const pendingPreparation = state.find((item) => item.stage !== "Architecture" && item.status !== "Complete");
+  if (pendingPreparation?.stage === "Product Definition") {
+    const pendingProduct = state
+      .filter((item) => item.stage === pendingPreparation.stage && item.status !== "Complete")
+      .flatMap((item) => item.inputs);
     return {
       nextStep: "Product Definition",
       workOn: [...pendingProduct],
@@ -179,8 +187,10 @@ function guidance(report: DoctorReport, phase: BootstrapPhase): Pick<BootstrapRe
     };
   }
 
-  const pendingDelivery = DELIVERY_FILES.filter((relative) => !bootstrapDocOk(report, relative));
-  if (pendingDelivery.length > 0) {
+  if (pendingPreparation?.stage === "Delivery Framing") {
+    const pendingDelivery = state
+      .filter((item) => item.stage === pendingPreparation.stage && item.status !== "Complete")
+      .flatMap((item) => item.inputs);
     return {
       nextStep: "Delivery Framing",
       workOn: [...pendingDelivery],
@@ -204,6 +214,19 @@ function guidance(report: DoctorReport, phase: BootstrapPhase): Pick<BootstrapRe
     };
   }
 
+  const architecture = state.find((item) => item.stage === "Architecture");
+  if (architecture && architecture.status !== "Complete") {
+    return {
+      nextStep: "Architecture Gate",
+      workOn: architecture.inputs,
+      goal: "承認されたArchitecture Decisionと現在状態を確認し、人間の明示的な承認をCurrent Stateへ記録してください。",
+      suggestedInstruction:
+        "AGENTS.md と agent/workflows/bootstrap.md を読んでください。\n" +
+        "Architecture DecisionとARCHITECTURE.mdの整合を確認してください。\n" +
+        "人間が明示的に承認した場合だけ、Project Bootstrap Skillのrecord-approval adapterでarchitecture項目を更新してください。"
+    };
+  }
+
   return {
     nextStep: "Bootstrap Finalization",
     workOn: ["README.md"],
@@ -223,7 +246,7 @@ function nextAction(phase: BootstrapPhase, proposed: BootstrapAdr[], nextStep: B
     return `${proposed.map((adr) => adr.title).join(", ")} を承認または却下してください。承認されるまでScaffoldや実装は開始しません。`;
   }
   if (phase === "Needs Review") {
-    return "Proposed ADRとARCHITECTURE.mdの状態を確認してください。CLIは曖昧な状態を推測で確定しません。";
+    return "承認後に変更されたinputと下流影響を確認し、人間の明示的な再承認を得てください。CLIは曖昧な状態を推測で確定しません。";
   }
   if (phase === "Bootstrap Complete") {
     return "変更要求がある場合はSuggested Instructionの <ここに変更したい内容を書く> を置き換えてAI Agentへ渡してください。現在のProjectを検証する場合は control-plane check を実行してください。";
@@ -234,22 +257,21 @@ function nextAction(phase: BootstrapPhase, proposed: BootstrapAdr[], nextStep: B
 export async function bootstrapProject(rootDir = process.cwd()): Promise<BootstrapReport> {
   const report = await doctorProject(rootDir);
   const proposed = await proposedAdrs(report.root);
-  const architectureUnresolved = !checkOk(report, "Current Architecture");
-
-  let phase: BootstrapPhase = report.status === "Ready for Validation" ? "Bootstrap Complete" : report.status;
-  if (report.status === "Needs Review" && proposed.length === 0 && architectureUnresolved) {
-    phase = "Bootstrap In Progress";
-  }
+  const phase: BootstrapPhase = report.status === "Ready for Validation" ? "Bootstrap Complete" : report.status;
 
   const architectureGate = phase === "Architecture Gate Pending" ? "Pending" : "None";
-  const stepGuidance = guidance(report, phase);
+  const state = productState(report);
+  const stepGuidance = guidance(report, phase, state);
+  const reviewInputs = report.bootstrapState
+    ? [...new Set(report.bootstrapState.items.filter((item) => item.stage !== "Architecture").flatMap((item) => item.directInputs))]
+    : [];
 
   return {
     root: report.root,
     phase,
-    state: productState(report, phase),
+    state,
     architectureGate,
-    reviewInputs: [...REVIEW_INPUTS],
+    reviewInputs,
     humanGate: architectureGate === "Pending" ? { type: "Architecture Gate", adrs: proposed } : undefined,
     ...stepGuidance,
     nextAction: nextAction(phase, proposed, stepGuidance.nextStep),
@@ -260,7 +282,7 @@ export async function bootstrapProject(rootDir = process.cwd()): Promise<Bootstr
 export function formatBootstrapReport(report: BootstrapReport, styles: OutputStyles = plainStyles, title = "Control Plane Bootstrap"): string {
   const lines = [styles.heading(title), "", `Phase: ${styles.status(report.phase)}`, "", styles.heading("Current State:")];
   for (const item of report.state) {
-    lines.push(`  ${item.label.padEnd(18)} ${styles.status(item.status)}`);
+    lines.push(`  ${item.label.padEnd(18)} ${styles.status(item.status)}${item.detail ? ` — ${item.detail}` : ""}`);
   }
 
   lines.push("", `Architecture Gate: ${styles.status(report.architectureGate)}`);

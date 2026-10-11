@@ -47,6 +47,25 @@ description: 新しいプロジェクトで、要求・制約・品質特性か�
 - Bootstrap後はルートREADMEをそのProject固有の入口へ置き換える。
 - Architecture Gate待ちをBootstrap完了と呼ばない。
 - Bootstrap完了条件を満たす前に「完了」としない。
+- 文書が埋まっていることと人間が承認したことを区別する。人間の明示的な承認発言がない限り承認を記録しない。
+
+## 明示的な承認の記録
+
+Bootstrapの項目、input、dependency、現在の承認は `.control-plane/bootstrap-state.json` を正本とする。
+
+人間が対象項目を明示的に承認した場合だけ、Repository rootから次を実行する。
+
+```bash
+node .agents/skills/project-bootstrap/scripts/record-approval.mjs <item-id>
+```
+
+標準item IDは `product-goal`、`requirements`、`constraints`、`delivery`、`architecture`。
+
+- 無言、会話終了、修正がなくなったこと、Agent自身の品質判断を承認と解釈しない。
+- 実行前に承認対象と現在のinputを人間へ明示する。
+- Adapterは対象と上流dependencyのrevisionを記録する。承認後に内容が変わると `control-plane next` は `Needs Review` を返す。
+- `TODO` placeholderが残る場合は承認を記録しない。
+- 差し戻し時は必要なSSOTを更新し、Approval historyや議事録をstate fileへ追加しない。
 
 ## Bootstrap Preparation Complete
 
@@ -69,6 +88,7 @@ description: 新しいプロジェクトで、要求・制約・品質特性か�
 - Scope / Effort Estimate / Risks / Milestonesが必要な粒度で整理されている。
 - Architectureと主要Technologyが決定している。
 - 長期的影響のある判断がADRに記録され、必要な承認状態が反映されている。
+- `.control-plane/bootstrap-state.json` の全項目が現在revisionに対して明示的に承認されている。
 - `ARCHITECTURE.md` が現在状態を表している。
 - ルートREADMEがProject固有の入口になっている。
 - 採用技術固有の検証が必要なら `scripts/check-project.sh` または `scripts/check-project.ps1` から検証できる。

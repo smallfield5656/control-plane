@@ -85,9 +85,11 @@ Spike には仮説、成功条件、測定値、結論を残す。
 
 Bootstrap完了後にAccepted Decisionを変更する場合も、過去のADRを書き換えず新しいADRでSupersedeする。通常開発時の詳細なDecision変更フローは `agent/workflows/issue.md` を正本とする。
 
-Approvalはfile-orientedではなくdecision-orientedに扱う。`docs/product/` や `docs/delivery/` は判断材料となるSSOTであり、各ファイル自体へ承認状態を持たせない。Human Gateでは、Review Inputsを確認したうえでADRなどのDecisionを判断する。
+Approvalは表示項目またはDecision Gate単位で扱う。`docs/product/` や `docs/delivery/` は判断材料となるSSOTであり、各ファイル本文へ承認metadataを持たせない。Human Gateでは、Review Inputsを確認したうえでADRなどのDecisionを判断する。
 
-専用の承認ログは持たない。必要な変更履歴はADRのStatusとGit / Pull Requestの履歴へ委ねる。ただし監査・法令・契約などで明示的な承認記録が必要な場合は、Project固有の要件として追加する。
+現在の承認状態は `.control-plane/bootstrap-state.json` を正本とする。これはApproval historyではなくCurrent Stateであり、必要な変更履歴はADRのStatusとGit / Pull Requestの履歴へ委ねる。ただし監査・法令・契約などで本人性を含む承認記録が必要な場合は、Project固有の要件として署名やPR approvalを追加する。
+
+人間が項目を明示的に承認した場合だけ、`.agents/skills/project-bootstrap/SKILL.md` のadapterで対象と上流inputのrevisionを記録する。無言、会話終了、Agent自身の品質判断を承認と解釈しない。承認後に対象または上流inputが変わった場合は `Needs Review` とし、再承認まで次Stepへ進まない。
 
 Budget / Risk / Timelineへの重大な影響がある場合も、必要なDecision Gateを通す。
 
@@ -141,6 +143,7 @@ Bootstrap完了と報告する前に次を確認する。
 - AI協働Projectでは、AI Agent Elapsed / Human Involvement / Human-only Equivalentが区別されている
 - 主要なArchitecture / Technology decisionが説明できる
 - 人間承認が必要なADRはArchitecture Gateを通過し、状態が反映されている
+- Bootstrap Current Stateの全項目が現在revisionに対して明示的に承認されている
 - `ARCHITECTURE.md` が現在状態を表している
 - ルート `README.md` がプロジェクト固有の入口になっている
 - 採用技術固有の検証が必要なら project validation hook が用意されている

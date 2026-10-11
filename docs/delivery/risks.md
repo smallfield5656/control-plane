@@ -22,12 +22,14 @@
 | R-014 | Templateの未追跡・ignored fileがartifactへ混入する | Medium | High | Git管理対象だけをstagingし、path guardとRegression testで確認する | Maintainer | stagingへのローカルfile混入 | Mitigated |
 | R-015 | npm artifactで `.gitignore` が欠落し生成ProjectがSecret等を誤追跡する | Medium | High | transport nameから復元しpacked integration testで正本との一致を確認する | Maintainer | 生成Projectに `.gitignore` がない | Mitigated |
 | R-016 | tracked Markdown等の本文にSecret / PIIが混入する | Medium | High | 内容ReviewとGitHub Secret scanning / Push protectionの設定確認 | Maintainer | 内容ReviewやSecret検出の警告 | Open |
+| R-017 | 承認後の変更や上流変更に古い承認が残り、Bootstrapが誤って先へ進む | Medium | High | transitive input revisionをCurrent Stateへ記録し、不一致をNeeds Reviewにする | Maintainer | 承認後の編集でCompleteが維持される | Mitigated |
+| R-018 | AI Agentが明示的人間承認なしにapproval stateを更新する | Medium | High | Workflow / Skillで明示発言だけを根拠とし、adapter実行をGit履歴でReviewする | Maintainer / Approver | 会話終了やAgent判断だけでapprovalが記録される | Open |
 
 ## Current Focus
 
 現在の対象は公開済みCLIのMaintenance。R-008 / R-009はartifact integration testと単一のTemplate正本で対策済みだが、Template変更時のRegression riskとして監視を続ける。
 
-今回のpatchはR-014 / R-015を対策する。R-016はpath guardだけでは防げないため、内容Reviewと公開Repositoryの設定確認を継続する。
+今回のfeatureはR-017をrevision検証で対策する。R-018はlocal write権限を持つAgentの本人性を技術的に証明するものではないため、明示承認ルールとGit Reviewを継続する。監査要件があるProjectは署名やPR approvalを追加する。
 
 公開状況は `milestones.md`、公開手順は `../operations/release.md` を参照する。対策済みでも公開後の検証前にRelease完了としない。
 
