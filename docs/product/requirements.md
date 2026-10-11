@@ -20,6 +20,7 @@
 - [ ] 開発時とnpm配布時に、同じstaging済みTemplateを使う。
 - [ ] Templateの未追跡・ignored fileをbuild・配布対象へ含めない。
 - [ ] TemplateへのCredentialに相当するpathとSymbolic linkの混入は、buildを失敗させる。
+- [ ] Control Plane製品固有の完成例を、新規Projectの生成物へ含めない。
 
 **Out of Scope**
 

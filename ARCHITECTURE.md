@@ -8,7 +8,7 @@
 
 `control-plane` は、AI-assisted developmentを制御するRepository contractと、その導入・診断・次Action案内・検証実行を支援するCLIから構成する。
 
-ADR-0001 / ADR-0002 / ADR-0003のArchitecture Gateを通過し、生成先Templateの正本を `template/` に分離し、CLIをTypeScript / Node.jsで実装し、標準Agent SkillsとControl Plane固有Workflowを別pathで管理する構成を採用した。
+ADR-0001からADR-0005までのArchitecture Gateを通過し、生成先Templateの正本を `template/` に分離し、CLIをTypeScript / Node.jsで実装し、標準Agent SkillsとControl Plane固有Workflowを別pathで管理する構成を採用した。
 
 ## Technology Stack
 
@@ -39,7 +39,7 @@ ADR-0001 / ADR-0002 / ADR-0003のArchitecture Gateを通過し、生成先Templa
 - `docs/`
 - `scripts/`
 - `.github/`
-- examples / placeholder source directories
+- placeholder source directories
 
 ### CLI
 
@@ -75,8 +75,7 @@ ADR-0001 / ADR-0002 / ADR-0003のArchitecture Gateを通過し、生成先Templa
 - `packages/cli/src/output.ts`: 共通の色・TTY / environment判定。Node.js標準APIだけを使い、診断・Workflow logicから分離する。
 - `scripts/check.*`: control-plane productのValidation Entry Point
 - `scripts/check-project.*`: CLI + Template固有Validation
-- `template/examples/`: 完成例の唯一の正本
-- `examples/`: 完成例への参照だけを置く入口
+- `examples/`: Control Plane製品の完成例。生成先Projectには配布しない
 
 ## Dependency Direction
 
@@ -113,6 +112,8 @@ CLIへTemplate本文、Workflow truth、Validation logicを重複してhard-code
 開発時と配布時の `control-plane init <directory>` は同じstaging済みTemplateを読み、既存targetを上書きせず新しいDirectoryへ展開する。root source directoryへのfallbackは持たない。
 
 npmで除外されるroot `.gitignore` はartifact内だけ `gitignore.template` として運び、`init` が `.gitignore` へ復元する。本文の正本は引き続きroot `template/.gitignore` であり、CLIへ埋め込まない。
+
+Control Plane製品固有の完成例はroot `examples/` に保持し、staging対象の `template/` から分離する。
 
 staging copy、build出力、npm tarballは生成物でありGitへ追跡しない。設計理由はADR-0004を参照する。
 

@@ -20,12 +20,12 @@ required_files=(
   ".github/ISSUE_TEMPLATE/bug.yml"
   ".github/ISSUE_TEMPLATE/investigation.yml"
   ".github/pull_request_template.md"
-  "template/examples/file-organizer/README.md"
-  "template/examples/file-organizer/overview.md"
-  "template/examples/file-organizer/requirements.md"
-  "template/examples/file-organizer/constraints.md"
-  "template/examples/file-organizer/adr-0001-use-tauri.md"
-  "template/examples/file-organizer/ARCHITECTURE.md"
+  "examples/file-organizer/README.md"
+  "examples/file-organizer/overview.md"
+  "examples/file-organizer/requirements.md"
+  "examples/file-organizer/constraints.md"
+  "examples/file-organizer/adr-0001-use-tauri.md"
+  "examples/file-organizer/ARCHITECTURE.md"
 )
 
 for file in "${required_files[@]}"; do
@@ -69,9 +69,9 @@ require_heading "agent/workflows/bootstrap.md" "## Bootstrap Completion Gate"
 require_heading "agent/workflows/issue.md" "## 4. Impact Analysis"
 require_heading ".agents/skills/project-bootstrap/SKILL.md" "## Bootstrap Preparation Complete"
 require_heading ".agents/skills/project-bootstrap/SKILL.md" "## Bootstrap完了条件"
-require_heading "template/examples/file-organizer/adr-0001-use-tauri.md" "## Context"
-require_heading "template/examples/file-organizer/adr-0001-use-tauri.md" "## Decision"
-require_heading "template/examples/file-organizer/adr-0001-use-tauri.md" "## Consequences"
+require_heading "examples/file-organizer/adr-0001-use-tauri.md" "## Context"
+require_heading "examples/file-organizer/adr-0001-use-tauri.md" "## Decision"
+require_heading "examples/file-organizer/adr-0001-use-tauri.md" "## Consequences"
 
 echo "Document shape: OK"
 
