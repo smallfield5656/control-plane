@@ -6,6 +6,9 @@ import { bootstrapProject, formatBootstrapReport } from "./bootstrap.js";
 import { runProjectCheck } from "./check.js";
 import { doctorProject, formatDoctorReport } from "./doctor.js";
 import { initProject } from "./init.js";
+import { formatApprovalResult, recordDecision, recoverDecision } from "./approval.js";
+import { COMMANDS, GLOBAL_OPTIONS } from "./commands.js";
+import { candidateOutput, completionScript } from "./completion.js";
 import { createStyles, type OutputStyles } from "./output.js";
 
 function usage(styles: OutputStyles): string {
@@ -14,11 +17,7 @@ function usage(styles: OutputStyles): string {
     "",
     styles.heading("Usage:"),
     ...[
-      "  control-plane init <directory>",
-      "  control-plane doctor [directory]",
-      "  control-plane next [directory]",
-      "  control-plane bootstrap [directory]  alias for next",
-      "  control-plane check [directory]",
+      ...COMMANDS.map(spec => `  control-plane ${spec.usage}`),
       "  control-plane --help",
       "  control-plane --version"
     ].map((line) => line.replace(/control-plane (\S+)/, (_, command: string) => `control-plane ${styles.heading(command)}`)),
@@ -36,8 +35,33 @@ async function version(): Promise<string> {
 
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
-  const noColor = argv.includes("--no-color");
-  const [command, ...args] = argv.filter((arg) => arg !== "--no-color");
+  if (argv[0] === "completion" && argv[1] === "candidates") {
+    process.stdout.write(await candidateOutput(argv.slice(2)));
+    return;
+  }
+  let command: string | undefined;
+  const args: string[] = [];
+  const flags = new Set<string>();
+  let reason: string | undefined;
+  let argumentError: string | undefined;
+  let positionalOnly = false;
+  for (let index = 0; index < argv.length; index++) {
+    const token = argv[index];
+    if (!positionalOnly && token === "--") { positionalOnly = true; continue; }
+    if (!positionalOnly && token === "--no-color") { flags.add(token); continue; }
+    if (!command) { command = token; continue; }
+    if (!positionalOnly && token.startsWith("-")) {
+      const spec = COMMANDS.find(spec => spec.name === command);
+      if (!spec || ![...GLOBAL_OPTIONS, ...spec.options].includes(token)) { argumentError = `Unknown option: ${token}`; break; }
+      if (flags.has(token)) { argumentError = `Duplicate option: ${token}`; break; }
+      flags.add(token);
+      if (token === "--reason") {
+        reason = argv[++index];
+        if (reason === undefined) argumentError = "--reason requires a value.";
+      }
+    } else args.push(token);
+  }
+  const noColor = flags.has("--no-color");
   const stdout = createStyles({ noColor });
   const stderr = createStyles({ noColor, stream: process.stderr });
   const invalid = (message: string) => {
@@ -45,6 +69,7 @@ async function main(): Promise<void> {
     console.error(usage(stderr));
     process.exitCode = 2;
   };
+  if (argumentError) return invalid(argumentError);
 
   if (!command || command === "--help" || command === "-h") {
     if (args.length) return invalid("--help does not accept positional arguments.");
@@ -56,19 +81,26 @@ async function main(): Promise<void> {
     console.log(await version());
     return;
   }
-  if (!["init", "doctor", "next", "bootstrap", "check"].includes(command)) {
+  const spec = COMMANDS.find(spec => spec.name === command);
+  if (!spec) {
     return invalid(`Unknown command: ${command}`);
   }
-  if (args.some((arg) => arg.startsWith("-"))) {
-    return invalid(`Unknown option: ${args.find((arg) => arg.startsWith("-"))}`);
-  }
-  if ((command === "init" && args.length !== 1) || args.length > 1) {
-    return invalid(command === "init" ? "init requires exactly one directory." : `${command} accepts at most one directory.`);
-  }
+  if (flags.has("--help")) { console.log(usage(stdout)); return; }
+  if (args.length < spec.min || args.length > spec.max) return invalid(`Invalid arguments. Usage: control-plane ${spec.usage}`);
+  if ((command === "approve" && ((args[0] === "adr" && args.length !== 2) || (args[0] !== "adr" && args.length !== 1))) ||
+      (command === "reject" && (args[0] !== "adr" || reason === undefined)) ||
+      (command === "migrate" && args.length > 0 && (args[0] !== "adr" || args.length !== 2))) return invalid(`Usage: control-plane ${spec.usage}`);
+  if (command === "recover" && flags.has("--complete") === flags.has("--rollback")) return invalid("recover requires exactly one of --complete or --rollback.");
 
   const [root = process.cwd()] = args;
   try {
-    if (command === "init") {
+    if (command === "completion") {
+      process.stdout.write(await completionScript(args[0]));
+    } else if (command === "approve" || command === "reject" || command === "migrate") {
+      console.log(formatApprovalResult(await recordDecision(process.cwd(), command, args[0], args[1], reason), stdout));
+    } else if (command === "recover") {
+      console.log(formatApprovalResult(await recoverDecision(process.cwd(), flags.has("--complete") ? "complete" : "rollback"), stdout));
+    } else if (command === "init") {
       await initProject(root);
       console.log(`${stdout.success("Initialized Control Plane project")} at ${root}`);
     } else if (command === "doctor") {

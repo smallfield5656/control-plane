@@ -27,6 +27,12 @@ control-plane doctor [directory]
 control-plane next [directory]
 control-plane bootstrap [directory]  # alias for next
 control-plane check [directory]
+control-plane approve <item-id>
+control-plane approve adr <number>
+control-plane reject adr <number> --reason "<reason>"
+control-plane migrate [adr <number>]
+control-plane recover --complete | --rollback
+control-plane completion <bash|powershell>
 control-plane --help
 control-plane --version
 ```
@@ -57,7 +63,9 @@ Product Definition
 
 Architecture Gateが必要な場合は、Proposed ADRをHuman Gateとして提示し、承認前に実装へ進みません。
 
-人間がCodex等のAI Agentへ項目の承認を明示すると、AgentはProject Bootstrap Skillのadapterで承認時点のinput revisionをCurrent Stateへ記録します。承認後に対象または上流inputが変わると `Needs Review` に戻ります。CLI自身はAI APIを利用せず、`next` / `doctor` はstateをread-onlyで検証します。
+人間はCLIで対象を明示して承認・却下を記録できます。AI Agentへ明示承認を伝える場合も同じCLIを使います。ADR採用後にAIが現在設計へ反映し、人間がArchitecture項目を別途確認します。承認後に対象または上流inputが変わると `Needs Review` になります。CLIはAI APIを利用せず、`next` / `doctor` はread-onlyです。
+
+既存Projectの移行、Bash / PowerShell補完の設定、途中失敗の復旧は [CLI README](packages/cli/README.md) を参照してください。CLI更新だけではProject assetやshell設定を変更しません。
 
 Bootstrap完了後は、変更要求をGitHub Issueとして受け付けるための `Suggested Instruction` を表示します。詳細な通常開発フローは生成Projectの `agent/workflows/issue.md` がSource of Truthです。
 

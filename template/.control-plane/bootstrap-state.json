@@ -1,10 +1,10 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "revisionAlgorithm": "sha256-text-lf-v1",
   "items": [
     {
-      "id": "product-goal",
-      "label": "Product Goal",
+      "id": "product-overview",
+      "label": "Product Overview",
       "stage": "Product Definition",
       "inputs": [
         "docs/product/overview.md"
@@ -22,7 +22,7 @@
       ],
       "inputDirectories": [],
       "dependsOn": [
-        "product-goal"
+        "product-overview"
       ],
       "approval": null
     },
@@ -77,5 +77,11 @@
       ],
       "approval": null
     }
-  ]
+  ],
+  "adr": {
+    "directory": "docs/architecture/adr",
+    "architectureItem": "architecture",
+    "dependsOn": ["delivery"],
+    "decisions": {}
+  }
 }

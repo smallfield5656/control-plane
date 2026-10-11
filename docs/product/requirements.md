@@ -100,7 +100,7 @@ CLI化に伴うRepository再編で、既存Templateの意味と利用方法を�
 
 **Statement**
 
-CLIは `init / doctor / next / check` と `bootstrap` 互換Aliasに限定し、必要性が未実証の機能を追加しない。
+CLIは導入・診断・次Action案内・検証、明示的な承認・却下、その安全な移行・復旧、shell補完に限定し、必要性が未実証の機能を追加しない。承認操作はREQ-011、移行・復旧はREQ-012、補完はREQ-013を正本とする。
 
 **Acceptance Criteria**
 
@@ -117,7 +117,7 @@ CLIは `init / doctor / next / check` と `bootstrap` 互換Aliasに限定し、
 
 - [ ] `control-plane next [directory]` はRepositoryを変更しない。
 - [ ] `control-plane bootstrap [directory]` は後方互換のAliasとして `next` と同じ結果を返す。
-- [ ] Product Goal / Requirements / Constraints / Delivery / Architectureの進捗を表示する。
+- [ ] Projectのstateに定義された項目名で進捗を表示する。新Templateの命名はREQ-011に従い、既存ProjectのID・labelも尊重する。
 - [ ] Bootstrap In Progressでは、`Next Step` / `Work On` / `Goal` / `Suggested Instruction` を表示し、人間が次に触る具体的なRepository pathを確認できる。
 - [ ] `Suggested Instruction` はAI Agentへ単体でコピーして意味が通るよう、対象pathを明示し、「上記ファイル」等の外部文脈依存表現を使わない。
 - [ ] `Suggested Instruction` は `AGENTS.md` と関連Workflowへの入口、現在のObjective、Work Scope、Stop Conditionに限定し、Workflow本文を重複しない。
@@ -127,8 +127,8 @@ CLIは `init / doctor / next / check` と `bootstrap` 互換Aliasに限定し、
 - [ ] Human Gateでは、承認対象となるADRのRepository pathを `Decision` として表示し、`Suggested Instruction` より人間の判断を優先する。
 - [ ] Approvalは表示項目またはDecision Gate単位で扱い、対象fileは承認時点のinput fingerprintとして紐づける。
 - [ ] Product / Delivery文書本文へ承認metadataを追加せず、Bootstrap Current Stateを承認状態のSSOTとする。
-- [ ] Human Gateの承認・却下をCLI自身は実行しない。
-- [ ] AI Agentは人間の明示的な承認を受けた場合だけBootstrap Current Stateを更新し、無言・会話終了・Agent自身の品質判断を承認と解釈しない。
+- [ ] `next` / `doctor` はHuman Gateの承認・却下を実行せず、対象の番号・タイトル・Repository pathと、人間が実行するコマンドを表示する。
+- [ ] AI Agentによる承認操作もREQ-011の明示承認ルールと共通CLIを使う。
 - [ ] Bootstrap Current Stateは現在状態だけを保持し、Approval historyや議事録を保持しない。変更履歴はGitへ委ねる。
 - [ ] `next` と `doctor` はBootstrap Current Stateをread-onlyで検証し、Repositoryを変更しない。
 - [ ] 同じRepository状態から同じ判定と固定メッセージを返し、AI APIを利用しない。
@@ -137,7 +137,7 @@ CLIは `init / doctor / next / check` と `bootstrap` 互換Aliasに限定し、
 **Out of Scope**
 
 - `next` / `doctor` によるRepositoryの自動更新
-- ADRの自動承認・却下
+- 人間の明示的な判断を伴わないADRの自動承認・却下
 - AI/LLMによる文面生成
 - Approval history管理
 - Issue番号の自動取得・推測
@@ -195,3 +195,85 @@ CLIは `init / doctor / next / check` と `bootstrap` 互換Aliasに限定し、
 - [ ] 色の有無で診断結果・案内本文・終了コードを変えない。`--version` は常に番号だけを装飾なしで表示する。
 - [ ] `check` は選択scriptと開始・成功／失敗を表示し、child logは変更せず継承する。
 - [ ] 実行時依存を追加せず、Node.js 22の最低対応版でも動作する。
+
+### REQ-011: Explicit item and ADR decisions
+
+**Statement**
+
+人間は文書を確認し、対象を明示したCLIでBootstrap項目と個別ADRの承認・却下を記録できる。実行時点の内容を承認し、設計判断の採用と現在設計への反映確認を分ける。
+
+**Acceptance Criteria**
+
+- [ ] Project rootで `control-plane approve <item-id>`、`control-plane approve adr <adr-number>`、`control-plane reject adr <adr-number> --reason "<理由>"` を実行できる。対象は必須で、推測や一括承認をしない。
+- [ ] 項目・input・dependencyはProjectのmachine-readable definitionから取得し、CLIへ標準5項目や文書名を固定しない。
+- [ ] 新Templateは `product-overview` / `Product Overview` を標準ID・labelとし、overview.md全体の承認を表す。依存参照・表示・Workflow・テストを整合させる。命名は承認内容のまとまりと範囲を表す。
+- [ ] 項目承認は対象と推移的な上流inputのscope・hashを記録する。同一内容の再承認は成功扱いのno-opとし、通常itemの内容変更後は同じコマンドで再承認できる。
+- [ ] 未知ID、不正schema、欠落対象、Repository外path、TODO・必須placeholder、現在revisionに対してCompleteでない上流を拒否する。検証失敗では対象fileとstateを変更しない。
+- [ ] ADR番号は4桁とし、ADR directory直下の `NNNN-*.md` から一意に解決する。該当なし・重複・`0000`、template・README、不正pathを拒否する。重複時は候補file名を表示する。
+- [ ] ADRのStatusが欠落・重複・曖昧な場合は拒否する。初回approveは指定ProposedだけをAcceptedへ変更し、他のADRやArchitecture項目を承認しない。
+- [ ] ADRの承認では宣言された上流の有効な承認と対象の必須記述を要求し、Status変更後のADRと上流inputの照合情報を記録する。Bootstrap後も同じ操作を利用できる。
+- [ ] 有効なAccepted ADRへの同一承認はno-op。ADRが変更されず上流だけが変更された場合は、上流の再承認後に同じapproveコマンドで照合情報を更新し、ADR本文・Statusを維持する。
+- [ ] Accepted ADR自体が改行正規化以外で変更されていれば再承認を拒否する。元の内容へ戻すか、新しいADRでSupersedeするよう案内する。Rejected / SupersededをAcceptedへ戻さない。
+- [ ] 上流変更でADRのStatusを自動でProposedへ戻さない。Architecture未承認の期間でもAccepted ADRの内容・前提変更を検出し、`next` / `doctor` で再レビューを案内する。
+- [ ] rejectは指定ProposedだけをRejectedへ変更し、空白だけでない理由をADRの専用 `## Rejection Reason` 欄へ保存する。上流未承認・Needs Reviewでも却下できる。対象・path・Statusの検証は維持する。
+- [ ] 却下理由欄の重複・曖昧さや既存の理由を黙って上書きしない。Rejectedの同一内容・同一理由での再実行はno-op。異なる理由や却下後のADR変更では拒否し、別のレビューとGit上の訂正を案内する。
+- [ ] 却下内容の照合情報をstateへ記録するが、理由本文をJSONへ複製しない。承認履歴・議事録をstateへ蓄積しない。
+- [ ] CLIはStatus、却下理由欄、機械的な承認記録だけを更新し、設計本文やCurrent Architectureを生成しない。
+- [ ] 人間が新しいADRを承認した後、AIが旧ADRのStatusと所定の置き換え参照だけを更新できる。本文・過去の判断理由や承認記録を取り直さず、限定した正当なlifecycle変更だけを検証する。
+- [ ] 新旧の置き換え関係に自己参照・番号重複・曖昧な参照・循環・途中停止・本文改変があれば、Architecture最終承認を拒否する。旧ADRの採用時の記録は保持し、有効な新ADRの承認を要求する。
+- [ ] Architecture承認は、未解決Proposed、無効なADR承認、未完成のCurrent Architectureがあれば拒否する。人間が採用判断の反映結果を確認してから実行する。
+- [ ] AIは人間の対象を特定した明示承認を受けて同じCLIを実行する。曖昧な指示は確認し、無言・会話終了・AIの品質判断を承認にしない。旧adapterは共通CLIへ委譲し、Guardを二重実装しない。
+- [ ] 成功時は対象・変更結果・更新file・次Actionを、拒否時は理由・解消方法を表示する。上流だけのADR再承認ではStatus維持と承認記録の更新を明示する。itemの案内にはlabelと対象fileを含める。
+- [ ] 承認は内容の妥当性や実行者の本人性を自動証明しない。ADR承認やBootstrap完了後も、実装開始にはIssue Workflowの影響分析とDecision Gateを適用する。
+- [ ] 新規生成Projectとpacked npm artifactで同じ承認・却下・再承認・Architecture Gateが成立し、関連テストと `scripts/check.*` が成功する。
+
+**Out of Scope**
+
+- `review`、`revoke`、`approve --all`、必須の `--revision`、ADRのfile path指定、フォルダ連番変更
+- AI API・GitHub認証・署名・PR approvalのCore contractへの必須化
+- レビュー中の対象文書の並行編集。人間のレビュー中はAIによる更新を止める運用とする。
+
+### REQ-012: Explicit approval migration and recovery
+
+**Statement**
+
+既存Projectを明示的に移行でき、CLI同時実行や途中失敗で判断記録を失ったり、不整合を有効な承認と扱ったりしない。
+
+**Acceptance Criteria**
+
+- [ ] CLI更新やread-only診断だけでProject assetを自動更新しない。既存 `product-goal` とProject固有IDをstate定義に従って扱い、固定aliasや同一内容の重複itemを追加しない。
+- [ ] schema移行の操作と検証手順を文書化する。ID・dependsOnの変更は任意の別操作として明示し、移行で勝手に変更しない。
+- [ ] 個別記録のない既存Accepted ADRは通常approveや起動処理で暗黙に承認せず、人間が対象と現在の上流を確認する明示的な移行操作で照合情報を作る。上流の有効な承認を要求し、本文・Acceptedを維持する。
+- [ ] 移行記録は現在内容の確認を表し、過去の承認時点・本人性の復元としない。既存Superseded履歴の移行でも採用時の証拠を捏造しない。
+- [ ] 全更新操作と互換adapterは同じ排他・検証・復旧処理を通す。ロック取得後にstateを読み直し、他CLIが更新中なら変更せず終了する。
+- [ ] 単一fileを一時fileと置換で更新する。ADRとstateの複数file更新には検出可能な復旧記録を使い、途中失敗を黙って有効扱いしない。
+- [ ] 未完了更新を `next` / `doctor` がread-onlyで検出する。復旧は明示的な操作で、記録した変更前後に一致する場合だけ完了または復元できる。
+- [ ] 復旧記録と対象が一致せず別の編集が入っている場合は上書きせず停止する。復旧記録自体のschema・path・hashも検証する。
+- [ ] ロックの経過時間だけで稼働中プロセスのロックを削除しない。異常終了後の解除条件と、所有者の生存を判定できない場合の手順を文書化する。
+- [ ] v0.3 Projectの移行、変更を失わない競合、各更新段階の途中失敗、復旧中の再失敗、外部編集での復旧拒否をintegration testで検証する。
+
+### REQ-013: Bash and PowerShell completion
+
+**Statement**
+
+利用者はBashとPowerShellの標準Tab補完機構で、入力位置とprefixに合ったCLI候補を取得できる。
+
+**Acceptance Criteria**
+
+- [ ] 両shellで有効化・解除でき、セッション限定と設定file / profileでの継続利用の手順、対応versionを文書化する。CLIが設定fileを自動編集しない。
+- [ ] 実装済みコマンド、各コマンドの有効なオプション、引数位置に合った候補を返す。`in` はinit、`approve req` はrequirementsへ補完できる。
+- [ ] approveのitem候補はstateから取得し、承認状態で隠さない。新Template・旧Project・Project固有IDを扱い、`adr` も提示する。rejectの対象候補は `adr` とする。
+- [ ] ADR番号を承認・却下と共通の番号解決処理で取得し、prefixで絞る。挿入値は4桁番号だけとし、可能なshellではタイトルを説明に表示する。
+- [ ] template・README・0000・番号重複をADR候補から除外する。Statusによる候補絞り込みは必須にしない。
+- [ ] directory引数はshell標準のdirectory補完を使い、空白を含むpathと引用された引数を両shellで扱う。
+- [ ] 候補1件・複数件・なしは各shell標準の補完動作に従う。キー操作や候補表示形式の完全一致を要求しない。
+- [ ] Project外・state欠落・不正でも動的候補は空になり、静的補完を維持する。Tab操作のたびに通常診断やstack traceを表示しない。
+- [ ] 候補取得はoffline・read-onlyで、承認・却下・checkや復旧を実行しない。却下理由等の自由入力本文は生成しない。
+- [ ] CLIのコマンド・オプション定義と候補取得を共用し、shellへ承認対象の知識を複製しない。
+- [ ] BashとPowerShellの実際の補完機構、packed npm artifact内の補完asset、関連テストと `scripts/check.*` で検証する。
+
+**Out of Scope**
+
+- Zsh / Fish
+
+承認機能と補完は独立した受入対象とする。採用した設計判断はADR-0007 / ADR-0008、公開完了条件は `docs/delivery/milestones.md` を参照する。

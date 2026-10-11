@@ -8,7 +8,7 @@ Control PlaneはTemplate / Workflow / Scriptとして利用できるが、第三
 
 ## Expected Outcome
 
-Control PlaneのDurable Truthを保ったまま、CLIからTemplate導入・Repository診断・次Action案内・Validation実行ができる。
+Control PlaneのDurable Truthを保ったまま、CLIからTemplate導入・Repository診断・次Action案内・Validation実行、人間の明示的な判断記録ができる。
 
 ## Scope
 
@@ -20,6 +20,10 @@ Control PlaneのDurable Truthを保ったまま、CLIからTemplate導入・Repo
 - BootstrapからArchitecture Gate、Ongoing Developmentまでのread-only guidance
 - Template assetの完全性検証
 - CLIと既存Validation contractの統合
+- 人間のBootstrap項目・個別ADR承認／却下と、通常開発中の再承認・置き換え（REQ-011）
+- 既存Projectの明示的な移行、更新の排他・途中失敗の復旧（REQ-012）
+- Bash / PowerShellのTab補完（REQ-013）。承認機能とは独立した受入対象とする。
+- 上記機能のnpm配布、GitHub Release、公開artifactの検証。公開完了条件は `milestones.md` を参照する。
 
 ## Out of Scope
 
@@ -28,7 +32,7 @@ Control PlaneのDurable Truthを保ったまま、CLIからTemplate導入・Repo
 - `control-plane report`
 - `control-plane estimate`
 - CLIによるIssue自動作成
-- CLIによるADR自動承認・却下
+- 人間の明示的な判断を伴わないCLIによるADR自動承認・却下
 - `control-plane.yml` の必須化
 - Project Profile
 - Plugin system / Subagents / Agent runtime
@@ -53,6 +57,8 @@ Control PlaneのDurable Truthを保ったまま、CLIからTemplate導入・Repo
 
 - `init / doctor / next / check` が第三者でも利用できる。
 - `next` がBootstrap中からOngoing Developmentまで次Actionを案内できる。
+- 人間が明示した判断を共通CLIで記録でき、承認済み内容の改変・不整合でGateを通過しない。
+- Bash / PowerShellと配布済みnpm artifactで同じ補完候補・操作を利用できる。
 - CLI導入によってTemplate / Workflow / ValidationのSSOTが二重化しない。
 - Windows / Linuxの主要development environmentで利用可能である。
 - Repository再編後もTemplateの完全性を自動検証できる。
@@ -60,6 +66,6 @@ Control PlaneのDurable Truthを保ったまま、CLIからTemplate導入・Repo
 
 ## Decision Gates
 
-- Architecture Gate: Repository / Template structure と CLI technology を承認する。
-- Migration Gate: 既存Template assetの移動が安全に検証できることを確認する。
-- Release Gate: `init / doctor / next / check` のcontract、cross-platform validation、documentationを確認する。
+- Architecture Gate: Maintainer / Approverが新しい永続判断をADRで確認する。今回の提案はADR-0007 / ADR-0008に記録し、承認後にCurrent Architectureと実装へ反映する。
+- Migration Gate: 既存Projectの明示的な移行・ADR照合・途中失敗の復旧が安全に検証できることを確認する。
+- Release Gate: Requirementsの受入条件、cross-platform validation、packed artifact、documentationを確認する。公開手順とnpmの人間承認は `../operations/release.md` を参照する。

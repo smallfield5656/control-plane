@@ -88,9 +88,9 @@ Accepted ADRで確定したDecisionを後から変更する場合、過去の判
 - Accepted ADRのDecision本文を直接書き換えて、新しい判断として扱わない。
 - 新しいDecisionを別ADRとして作成し、承認前は `Proposed` とする。
 - 新ADRの `Supersedes` に置き換える旧ADRを明記する。
-- 必要なHuman Gateを通し、新ADRが承認されたら `Accepted` にする。
-- 新ADRがAcceptedになった時点で、置き換えられる旧ADRを `Superseded` にする。
-- その後、`ARCHITECTURE.md` を新しい現在状態へ更新してから実装を進める。
+- 必要なHuman Gateを通し、人間がCLIで新ADRの採用・却下を記録する。操作・metadata形式の正本は `docs/architecture/adr/README.md`。
+- 新ADR採用後、AIが旧ADRのStatusを `Superseded` とし、所定の置き換え参照だけを反映する。判断本文・過去の理由・state照合記録は書き換えない。
+- その後、`ARCHITECTURE.md` を新しい現在状態へ更新し、人間がArchitecture項目を確認・承認する。実装開始には引き続きこのWorkflowの影響分析とDecision Gateを適用する。
 - 新ADRがRejectedの場合、旧ADRは引き続き有効なDecisionとして扱う。
 
 Requirements may evolve. Decisions may be superseded. History should not be rewritten.

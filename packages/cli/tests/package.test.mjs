@@ -42,7 +42,7 @@ test("packed package installs and runs the CLI golden path with the bundled temp
     assert.match(generatedReadme, /Control Plane Template/);
     await readFile(path.join(target, "AGENTS.md"), "utf8");
     const bootstrapState = JSON.parse(await readFile(path.join(target, ".control-plane/bootstrap-state.json"), "utf8"));
-    assert.equal(bootstrapState.schemaVersion, 1);
+    assert.equal(bootstrapState.schemaVersion, 2);
     assert.deepEqual(bootstrapState.items.map((item) => item.approval), Array(5).fill(null));
     await readFile(path.join(target, ".agents/skills/project-bootstrap/scripts/record-approval.mjs"), "utf8");
     const expectedGitignore = await readFile(path.resolve(packageDir, "../../template/.gitignore"), "utf8");
@@ -63,7 +63,7 @@ test("packed package installs and runs the CLI golden path with the bundled temp
     assert.match(nextOutput, /Control Plane Next/);
     assert.match(nextOutput, /Phase: Bootstrap In Progress/);
     assert.match(nextOutput, /Next Action:/);
-    for (const label of ["Product Goal", "Requirements", "Constraints", "Delivery", "Architecture"]) {
+    for (const label of ["Product Overview", "Requirements", "Constraints", "Delivery", "Architecture"]) {
       assert.match(nextOutput, new RegExp(`${label} +Pending`));
     }
     assert.match(nextOutput, /docs\/product\/constraints\.md/);
@@ -79,6 +79,28 @@ test("packed package installs and runs the CLI golden path with the bundled temp
     assert.match(help, /control-plane init <directory>/);
     assert.match(help, /control-plane next \[directory\]/);
     assert.match(help, /control-plane bootstrap \[directory\].*alias for next/);
+    assert.match(help, /control-plane approve/);
+    assert.match(exec(bin, ["completion", "bash"], { cwd: consumer }), /complete -F/);
+    assert.match(exec(bin, ["completion", "powershell"], { cwd: consumer }), /Register-ArgumentCompleter/);
+    assert.match(exec(bin, ["completion", "candidates", "--shell", "bash", "--index", "2", "--", "control-plane", "approve", "product-"], { cwd: target }), /^values\r?\nproduct-overview\r?\n$/);
+    const statePath = path.join(target, ".control-plane/bootstrap-state.json");
+    for (const item of bootstrapState.items) for (const input of item.inputs) {
+      const { writeFile } = await import("node:fs/promises");
+      await writeFile(path.join(target, input), `# ${item.label}\n\nReady.\n`);
+    }
+    const { writeFile } = await import("node:fs/promises");
+    await writeFile(path.join(target, "docs/architecture/adr/0001-runtime.md"), "# ADR-0001: Runtime\n\n- Status: Proposed\n- Supersedes: —\n- Superseded By: —\n\n## Context\nChoose runtime.\n\n## Decision\nUse Node.js.\n\n## Consequences\nRequires Node.js.\n");
+    const installedEnv = { ...process.env, PATH: path.dirname(bin) + path.delimiter + process.env.PATH };
+    for (const id of ["product-overview", "requirements", "constraints", "delivery"]) {
+      exec(process.execPath, [path.join(target, ".agents/skills/project-bootstrap/scripts/record-approval.mjs"), id], { cwd: target, env: installedEnv });
+    }
+    exec(bin, ["approve", "adr", "0001"], { cwd: target });
+    const adrCandidates = JSON.parse(exec(bin, ["completion", "candidates", "--shell", "powershell", "--index", "3", "--", "control-plane", "approve", "adr", "000"], { cwd: target }));
+    assert.deepEqual(adrCandidates.candidates, [{ value: "0001", description: "ADR-0001: Runtime" }]);
+    exec(bin, ["approve", "architecture"], { cwd: target });
+    const finalState = JSON.parse(await readFile(statePath, "utf8"));
+    assert.ok(finalState.adr.decisions["0001"].revision);
+    assert.ok(finalState.items.every(item => item.approval));
   } finally {
     if (tarball) {
       await rm(tarball, { force: true });

@@ -8,12 +8,13 @@ Maintenance scopeの工数・費用を管理するSSOT。AI Agent Elapsed、Huma
 
 ## Confidence
 
-Low — 明示的承認state featureについて、経過時間とHuman laborの実測値は収集していない。
+Low — 承認操作・移行・復旧・shell補完の実装時間は未実測。特にcrash recoveryと両shellのintegration testに不確実性がある。
 
 ## Assumptions
 
-- 現在の対象は明示的人間承認に基づくBootstrap進行、Template adapter、migration、公開artifact検証。
-- CLI commandは増やさず、`next` / `doctor` の判定contractとWorkflowを変更する。
+- 今回のScopeは `charter.md`、受入条件は `../product/requirements.md` を正本とする。
+- 新しい永続判断はADR-0007 / ADR-0008でレビューし、Architecture Gateの後に実装する。
+- 既存TypeScript / Node.jsと標準libraryを維持する案で、実行時依存やhosted infrastructureを追加しない。
 - npm / GitHub Releaseへの公開は、ReviewとWindows / Linux CIを確認した後に行う。
 - 過去のMVP / Release Readinessは完了済み。過去の見積もりを現在の残工数として扱わない。
 
@@ -21,8 +22,12 @@ Low — 明示的承認state featureについて、経過時間とHuman laborの
 
 | Area | AI Agent Elapsed | Human Involvement | Human-only Equivalent | Notes |
 |---|---|---|---|---|
-| Approval state / CLI implementation | Not measured | Not measured | Not estimated | Schema、revision、dependency、Agent adapter、Regression test |
-| Review / CI / release | Not estimated | Not estimated | Not estimated | 公開前の残作業 |
+| Item / ADR operations and migration | Not measured | Not estimated | 2–4 person-days | schema・既存互換・番号解決・本文/lifecycle照合・adapter・Gate案内 |
+| Lock / crash recovery | Not measured | Not estimated | 1–2 person-days | 複数file更新と外部編集を含むfailure injection |
+| Bash / PowerShell completion | Not measured | Not estimated | 1–2 person-days | 共通候補取得・shell実機・空白path・packed artifact |
+| Review / CI / release | Not measured | Not estimated | 0.5–1 person-day | 最低Node対応版・Windows/Linux・stage・公開物のGolden Path |
+
+Human-only Equivalentは同じ受入条件を熟知したEngineer 1名が1日8時間で実装・テスト・文書更新する参考rangeで、実測や納期保証ではない。CI、レビュー、npmの人間承認の待ち時間は含めない。AIの経過時間や人間の関与時間への換算は行わない。
 
 AI Agent ElapsedとHuman Involvementは単純合算しない。Human-only Equivalentを算出する場合は、同じScopeと品質条件で前提を明示する。
 
@@ -46,12 +51,12 @@ Not calculated
 
 - AI Agent Elapsed: Not measured
 - Human Involvement: Not measured
-- Human-only Equivalent: Not estimated
+- Human-only Equivalent: 4.5–9 person-days（参考見積もり、Low confidence）
 - Initial Cost: Not calculated
 - Monthly Cost: Not calculated; required hosted infrastructureなし
 
 ## Main Uncertainty
 
-Windows / Linuxでのstagingとpacked artifactの動作、公開accountの設定、Review待ち時間。公開済みnpm artifactの確認前にRelease完了とは扱わない。
+Windows / Linuxでのfile置換・ロック、途中失敗の復旧、PowerShellの実際の補完機構、packed artifact、Reviewとnpmの人間承認待ち。公開済みnpm artifactの確認前にRelease完了とは扱わない。
 
 過去の見積もりの変更履歴はGit、完了したRelease Readinessの成果は `docs/plans/completed/cli-mvp-release-readiness.md` を参照する。

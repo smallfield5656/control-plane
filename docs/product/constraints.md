@@ -17,7 +17,7 @@
 ## Security / Privacy
 
 - 初期MVPはCredentialやSecretを必須としない。
-- `init / doctor / next / check` は原則local filesystem上で完結する。
+- CLIのProject操作は原則local filesystem上で完結する。
 - 既存Projectを破壊的に変更しない。
 
 ## Network
@@ -50,5 +50,5 @@
 
 ## Project Stage
 
-- 現在は公開済みCLIのFeature maintenance phase。今回のminor releaseはBootstrap進行をplaceholder推定から明示的人間承認とrevision検証へ変更する。
+- 現在は公開済みCLIのFeature maintenance phase。公開状態と次ReleaseのScope / Gateは `docs/delivery/milestones.md` と `charter.md` を参照する。
 - 未実証の追加機能を先行導入しない。
