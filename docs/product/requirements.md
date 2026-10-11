@@ -88,9 +88,32 @@ CLI化に伴うRepository再編で、既存Templateの意味と利用方法を�
 
 **Statement**
 
-初期CLIは `init / doctor / check` に限定し、必要性が未実証の機能を追加しない。
+v0.1.0の初期CLIは `init / doctor / check` に限定し、必要性が未実証の機能を追加しない。
 
 **Acceptance Criteria**
 
-- [ ] `bootstrap / status / update / report / estimate` は初期MVPのOut of Scopeとする。
+- [ ] `bootstrap / status / update / report / estimate` はv0.1.0のOut of Scopeとする。
 - [ ] `control-plane.yml`、Project Profile、Plugin system、Subagentsは初期MVPの必須要素にしない。
+
+### REQ-008: Read-only Bootstrap guidance
+
+**Statement**
+
+利用者は、RepositoryからBootstrapの現在地、Human Gate、次Actionを決定論的に確認できる。
+
+**Acceptance Criteria**
+
+- [ ] `control-plane bootstrap [directory]` はRepositoryを変更しない。
+- [ ] Product Goal / Requirements / Constraints / Delivery / Architectureの進捗を表示する。
+- [ ] Proposed ADRがArchitecture Gate待ちなら、対象ADRをHuman Gateとして表示する。
+- [ ] Human Gateの承認・却下をCLI自身は実行しない。
+- [ ] 同じRepository状態から同じ判定と固定メッセージを返し、AI APIを利用しない。
+- [ ] 短い英語ラベルと日本語説明を組み合わせて次Actionを表示する。
+
+**Out of Scope**
+
+- Repositoryの自動更新
+- ADRの自動承認・却下
+- AI/LLMによる文面生成
+- `status` command
+- `--lang` / `--json`

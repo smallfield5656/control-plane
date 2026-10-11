@@ -2,6 +2,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { bootstrapProject, formatBootstrapReport } from "./bootstrap.js";
 import { runProjectCheck } from "./check.js";
 import { doctorProject, formatDoctorReport } from "./doctor.js";
 import { initProject } from "./init.js";
@@ -13,6 +14,7 @@ function usage(): string {
     "Usage:",
     "  control-plane init <directory>",
     "  control-plane doctor [directory]",
+    "  control-plane bootstrap [directory]",
     "  control-plane check [directory]",
     "  control-plane --help",
     "  control-plane --version"
@@ -72,6 +74,26 @@ async function main(): Promise<void> {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(`control-plane doctor failed: ${message}`);
+      process.exitCode = 1;
+    }
+    return;
+  }
+
+  if (command === "bootstrap") {
+    const [root = process.cwd(), ...rest] = args;
+    if (rest.length > 0) {
+      console.error(usage());
+      process.exitCode = 2;
+      return;
+    }
+
+    try {
+      const report = await bootstrapProject(root);
+      console.log(formatBootstrapReport(report));
+      process.exitCode = report.hasErrors ? 1 : 0;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`control-plane bootstrap failed: ${message}`);
       process.exitCode = 1;
     }
     return;
