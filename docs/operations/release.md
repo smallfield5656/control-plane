@@ -70,7 +70,7 @@ npm stage download "$stage_id"
 承認者がnpmjs.comのStaged PackagesでApproveした後、対象versionの取得が可能になるまで次を確認する。公開済みversionを再公開しない。
 
 ```bash
-release_version="0.3.0"
+release_version=$(node -p "require('./package.json').version")
 npm view "@smallfield5656/control-plane@$release_version" version dist.shasum dist.integrity
 npm view @smallfield5656/control-plane dist-tags
 ```
@@ -78,7 +78,7 @@ npm view @smallfield5656/control-plane dist-tags
 stageと公開物のshasumが一致することを確認してからGitHub Releaseを公開する。`gh auth status` が失敗した場合は `gh auth login --web` で認証する。
 
 ```bash
-release_version="0.3.0"
+release_version=$(node -p "require('./package.json').version")
 release_commit=$(git rev-parse HEAD)
 gh release create "v$release_version" \
   --repo smallfield5656/control-plane \
@@ -92,7 +92,7 @@ gh release view "v$release_version" --repo smallfield5656/control-plane
 最後に一時Directoryで公開物を確認する。
 
 ```bash
-release_version="0.3.0"
+release_version=$(node -p "require('./package.json').version")
 verify_dir=$(mktemp -d)
 cd "$verify_dir"
 npx --yes "@smallfield5656/control-plane@$release_version" --version

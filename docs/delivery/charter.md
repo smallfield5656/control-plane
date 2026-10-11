@@ -66,6 +66,6 @@ Control PlaneのDurable Truthを保ったまま、CLIからTemplate導入・Repo
 
 ## Decision Gates
 
-- Architecture Gate: Maintainer / Approverが新しい永続判断をADRで確認する。今回の提案はADR-0007 / ADR-0008に記録し、承認後にCurrent Architectureと実装へ反映する。
+- Architecture Gate: Maintainer / Approverが新しい永続判断をADRで確認し、承認後にCurrent Architectureと実装へ反映する。
 - Migration Gate: 既存Projectの明示的な移行・ADR照合・途中失敗の復旧が安全に検証できることを確認する。
 - Release Gate: Requirementsの受入条件、cross-platform validation、packed artifact、documentationを確認する。公開手順とnpmの人間承認は `../operations/release.md` を参照する。
