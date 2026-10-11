@@ -80,7 +80,7 @@ test("issue workflow preserves accepted ADR history when a decision changes", as
 
   assert.match(issueWorkflow, /すべての仕様変更でADRを作る必要はない/);
   assert.match(issueWorkflow, /Accepted ADR.*直接書き換え/);
-  assert.match(issueWorkflow, /新しいADR.*Proposed/);
+  assert.match(issueWorkflow, /新しいDecision.*別ADR.*Proposed/);
   assert.match(issueWorkflow, /Supersedes/);
   assert.match(issueWorkflow, /旧ADR.*Superseded/);
   assert.match(issueWorkflow, /ARCHITECTURE\.md.*現在/);
