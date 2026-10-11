@@ -4,6 +4,7 @@ set -euo pipefail
 required_files=(
   "AGENTS.md"
   "ARCHITECTURE.md"
+  ".control-plane/bootstrap-state.json"
   "docs/product/overview.md"
   "docs/product/requirements.md"
   "docs/product/constraints.md"
@@ -16,6 +17,7 @@ required_files=(
   "agent/workflows/bootstrap.md"
   "agent/workflows/issue.md"
   ".agents/skills/project-bootstrap/SKILL.md"
+  ".agents/skills/project-bootstrap/scripts/record-approval.mjs"
   ".github/ISSUE_TEMPLATE/feature.yml"
   ".github/ISSUE_TEMPLATE/bug.yml"
   ".github/ISSUE_TEMPLATE/investigation.yml"

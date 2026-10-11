@@ -6,8 +6,9 @@
 
 1. `AGENTS.md` をAI agentの入口として使う。
 2. `agent/workflows/bootstrap.md` に従ってProduct Goal / Requirements / Constraints / Deliveryを整理する。
-3. 重要なArchitecture decisionはADRを `Proposed` としてArchitecture Gateで承認する。
-4. 承認後にScaffoldし、`scripts/check.*` を共通Validation Entry Pointとして使う。
+3. 人間がProduct / Delivery項目を明示的に承認した場合だけ、Project Bootstrap Skillのadapterで `.control-plane/bootstrap-state.json` へ現在revisionを記録する。
+4. 重要なArchitecture decisionはADRを `Proposed` としてArchitecture Gateで承認し、同じadapterでArchitecture項目を記録する。
+5. 承認後にScaffoldし、`scripts/check.*` を共通Validation Entry Pointとして使う。
 
 Bootstrap後、このREADMEはProject固有のPurpose / Setup / Run / Validationへの入口へ置き換えてください。
 
@@ -28,6 +29,7 @@ SkillはWorkflowやDurable Truthを複製せず、それらを実行するため
 - Development: `docs/operations/development.md`
 - Agent Skills: `.agents/skills/`
 - Agent workflows: `agent/workflows/`
+- Bootstrap approval state: `.control-plane/bootstrap-state.json`
 
 ## Principles
 

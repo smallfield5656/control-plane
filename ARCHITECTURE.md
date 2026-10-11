@@ -93,6 +93,8 @@ Product / Architecture / Workflow / Validation contract
 
 CLIへTemplate本文、Workflow truth、Validation logicを重複してhard-codeしない。
 
+Bootstrapの項目、input、順序、dependency、現在の承認状態は生成Projectの `.control-plane/bootstrap-state.json` を機械可読なSSOTとする。CLIはschemaと安全な解釈だけを保持し、項目ごとの承認状態をcodeへ固定しない。設計理由はADR-0006を参照する。
+
 標準Agent Skillは `.agents/skills/` に置き、Control Plane固有Workflowは `agent/workflows/` に置く。SkillはWorkflowやDurable Truthを複製せず、それらを実行するAdapterとして扱う。
 
 `doctor` は既存Repository contractを読む診断Interfaceであり、Bootstrap WorkflowそのものをCLIへ複製しない。
@@ -119,13 +121,15 @@ staging copy、build出力、npm tarballは生成物でありGitへ追跡しな�
 
 ### doctor
 
-`control-plane doctor [directory]` は対象Repositoryをread-onlyで確認し、必須asset、Bootstrap placeholder、Proposed ADR、Current Architecture、Project READMEから保守的に状態と次Actionを提示する。
+`control-plane doctor [directory]` は対象Repositoryをread-onlyで確認し、必須asset、Bootstrap placeholder、明示的な承認stateとrevision、Proposed ADR、Current Architecture、Project READMEから保守的に状態と次Actionを提示する。
 
 Validationは実行せず、成功を推測しない。
 
 ### next
 
 `control-plane next [directory]` は対象Repositoryをread-onlyで確認し、状態に応じて `Next Step` / `Work On` / `Goal` / `Suggested Instruction` / `Human Gate` を提示する。
+
+Placeholderがないことだけでは完了とせず、人間の明示的な承認がCurrent Stateへ記録され、対象と上流inputのrevisionが一致する場合だけ項目を `Complete` とする。AI Agentは人間の明示的な承認を受けた場合にProject Bootstrap Skillのadapterでstateを更新する。
 
 Bootstrap Complete後は `Ongoing Development` を案内し、GitHub IssueをChange Intakeとして `agent/workflows/issue.md` へ橋渡しする。
 
@@ -161,3 +165,5 @@ Core Template contractは特定のHosted serviceやAI vendorを必須としな�
 - ADR-0002: `docs/architecture/adr/0002-cli-implementation-technology.md`
 - ADR-0003: `docs/architecture/adr/0003-standard-agent-skills-path.md`
 - ADR-0004: `docs/architecture/adr/0004-tracked-template-distribution.md`
+- ADR-0005: `docs/architecture/adr/0005-separate-product-examples-from-generated-projects.md`
+- ADR-0006: `docs/architecture/adr/0006-explicit-bootstrap-approval-state.md`

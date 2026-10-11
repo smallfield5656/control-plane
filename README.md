@@ -15,7 +15,7 @@ npx @smallfield5656/control-plane check .
 
 npm packageは `@smallfield5656/control-plane`、CLI bin名は `control-plane` です。
 
-`next` はRepositoryを変更せず、現在状態から次にやるべきことを案内する主コマンドです。Bootstrap中は Product Definition / Delivery Framing / Architecture Preparation / Human Gate / Finalization を案内し、Bootstrap完了後はIssue-drivenなOngoing Developmentへ橋渡しします。
+`next` はRepositoryを変更せず、現在状態から次にやるべきことを案内する主コマンドです。Bootstrap中は Product Definition / Delivery Framing / Architecture Preparation / Human Gate / Finalization を案内し、Bootstrap完了後はIssue-drivenなOngoing Developmentへ橋渡しします。文書が埋まっているだけでは完了とせず、`.control-plane/bootstrap-state.json` に記録された明示的人間承認と現在revisionが一致した場合だけ項目を `Complete` とします。
 
 `bootstrap` は `next` の後方互換Aliasとして残しています。
 
@@ -57,6 +57,8 @@ Product Definition
 
 Architecture Gateが必要な場合は、Proposed ADRをHuman Gateとして提示し、承認前に実装へ進みません。
 
+人間がCodex等のAI Agentへ項目の承認を明示すると、AgentはProject Bootstrap Skillのadapterで承認時点のinput revisionをCurrent Stateへ記録します。承認後に対象または上流inputが変わると `Needs Review` に戻ります。CLI自身はAI APIを利用せず、`next` / `doctor` はstateをread-onlyで検証します。
+
 Bootstrap完了後は、変更要求をGitHub Issueとして受け付けるための `Suggested Instruction` を表示します。詳細な通常開発フローは生成Projectの `agent/workflows/issue.md` がSource of Truthです。
 
 ## Agent Assets
@@ -77,6 +79,9 @@ Generated Projectでは次の境界を維持します。
 ```text
 requirements.md / constraints.md / delivery docs / ARCHITECTURE.md
     = Current Truth
+
+.control-plane/bootstrap-state.json
+    = Current Approval State
 
 ADR
     = Decision History

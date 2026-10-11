@@ -41,6 +41,10 @@ test("packed package installs and runs the CLI golden path with the bundled temp
     const generatedReadme = await readFile(path.join(target, "README.md"), "utf8");
     assert.match(generatedReadme, /Control Plane Template/);
     await readFile(path.join(target, "AGENTS.md"), "utf8");
+    const bootstrapState = JSON.parse(await readFile(path.join(target, ".control-plane/bootstrap-state.json"), "utf8"));
+    assert.equal(bootstrapState.schemaVersion, 1);
+    assert.deepEqual(bootstrapState.items.map((item) => item.approval), Array(5).fill(null));
+    await readFile(path.join(target, ".agents/skills/project-bootstrap/scripts/record-approval.mjs"), "utf8");
     const expectedGitignore = await readFile(path.resolve(packageDir, "../../template/.gitignore"), "utf8");
     assert.equal(await readFile(path.join(target, ".gitignore"), "utf8"), expectedGitignore);
     await assert.rejects(() => readFile(path.join(target, "gitignore.template")), { code: "ENOENT" });

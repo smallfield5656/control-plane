@@ -15,13 +15,13 @@ npm package名は `@smallfield5656/control-plane`、実行されるCLI bin名は
 
 `init` はControl Plane Templateを新規Directoryへ展開します。既存Directoryは上書きしません。
 
-`next` はRepositoryを変更せず、現在状態から次にやるべきことを固定ルールで案内する主コマンドです。Bootstrap中は `Next Step` / `Work On` / `Goal` / `Suggested Instruction` を表示し、Architecture Gateでは `Review Inputs` / `Human Gate` / `Decision` を表示して人間の判断を優先します。
+`next` はRepositoryを変更せず、`.control-plane/bootstrap-state.json` の明示的人間承認と現在revisionから次にやるべきことを決定論的に案内する主コマンドです。Bootstrap中は `Next Step` / `Work On` / `Goal` / `Suggested Instruction` を表示し、Architecture Gateでは `Review Inputs` / `Human Gate` / `Decision` を表示して人間の判断を優先します。
 
 Bootstrap完了後は `Next Step: Ongoing Development` と `Change Intake: GitHub Issue` を表示し、`AGENTS.md` と `agent/workflows/issue.md` を入口にした変更要求用の `Suggested Instruction` を案内します。CLI自身はIssueを作成せず、変更内容やIssue番号を推測しません。
 
 `bootstrap` は `next` の後方互換Aliasです。
 
-CLIはAI APIを利用せず、ADRの承認・却下やRepository更新も行いません。詳細なWorkflowはRepository上の `AGENTS.md` と関連WorkflowがSource of Truthであり、Suggested Instructionはそれらへの入口だけを示します。
+CLIはAI APIを利用せず、ADRの承認・却下やRepository更新も行いません。人間から明示的な承認を受けたAI AgentがProject Bootstrap SkillのadapterでCurrent Stateを更新し、CLIはread-onlyで検証します。詳細なWorkflowはRepository上の `AGENTS.md` と関連WorkflowがSource of Truthであり、Suggested Instructionはそれらへの入口だけを示します。
 
 ## Commands
 
@@ -51,4 +51,6 @@ control-plane check --no-color
 
 `--no-color` は検証の子プロセスにも伝わります。`FORCE_COLOR=1` は明示的な着色に使えますが、無効化指定を優先します。`--version` とコピー用の依頼文は常に装飾しません。
 
-独立した `TODO` / `TODO:` が文書に残っている項目は未完了として扱います。制約がない場合は `なし` と理由を記載してください。既存Projectの検証scriptはCLI更新では自動更新されません。
+独立した `TODO` / `TODO:` が文書に残っている項目は承認準備未完了として扱います。Placeholderがなくなっただけでは `Complete` になりません。制約がない場合は `なし` と理由を記載してください。
+
+v0.3以降は `.control-plane/bootstrap-state.json` と `.agents/skills/project-bootstrap/scripts/record-approval.mjs` が必要です。既存ProjectのTemplate assetはCLI更新では自動更新されないため、Release notesのMigrationに従って追加してください。
