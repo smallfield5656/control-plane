@@ -55,7 +55,7 @@ test("packed package installs and runs the CLI golden path with the bundled temp
     assert.equal(bootstrapAliasOutput, nextOutput);
 
     exec(bin, ["check", target], { cwd: consumer });
-    assert.equal(exec(bin, ["--version"], { cwd: consumer }).trim(), "0.2.0");
+    assert.equal(exec(bin, ["--version"], { cwd: consumer }).trim(), "0.2.1");
     const help = exec(bin, ["--help"], { cwd: consumer });
     assert.match(help, /control-plane init <directory>/);
     assert.match(help, /control-plane next \[directory\]/);
