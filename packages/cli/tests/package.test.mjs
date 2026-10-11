@@ -46,9 +46,15 @@ test("packed package installs and runs the CLI golden path with the bundled temp
     const doctorOutput = exec(bin, ["doctor", target], { cwd: consumer });
     assert.match(doctorOutput, /Status: Bootstrap In Progress/);
 
+    const bootstrapOutput = exec(bin, ["bootstrap", target], { cwd: consumer });
+    assert.match(bootstrapOutput, /Phase: Bootstrap In Progress/);
+    assert.match(bootstrapOutput, /Next Action:/);
+
     exec(bin, ["check", target], { cwd: consumer });
     assert.equal(exec(bin, ["--version"], { cwd: consumer }).trim(), "0.1.0");
-    assert.match(exec(bin, ["--help"], { cwd: consumer }), /control-plane init <directory>/);
+    const help = exec(bin, ["--help"], { cwd: consumer });
+    assert.match(help, /control-plane init <directory>/);
+    assert.match(help, /control-plane bootstrap \[directory\]/);
   } finally {
     if (tarball) {
       await rm(tarball, { force: true });
