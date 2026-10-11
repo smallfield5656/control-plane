@@ -14,7 +14,8 @@ function usage(): string {
     "Usage:",
     "  control-plane init <directory>",
     "  control-plane doctor [directory]",
-    "  control-plane bootstrap [directory]",
+    "  control-plane next [directory]",
+    "  control-plane bootstrap [directory]  alias for next",
     "  control-plane check [directory]",
     "  control-plane --help",
     "  control-plane --version"
@@ -79,7 +80,7 @@ async function main(): Promise<void> {
     return;
   }
 
-  if (command === "bootstrap") {
+  if (command === "next" || command === "bootstrap") {
     const [root = process.cwd(), ...rest] = args;
     if (rest.length > 0) {
       console.error(usage());
@@ -89,11 +90,11 @@ async function main(): Promise<void> {
 
     try {
       const report = await bootstrapProject(root);
-      console.log(formatBootstrapReport(report));
+      console.log(formatBootstrapReport(report).replace(/^Control Plane Bootstrap/, "Control Plane Next"));
       process.exitCode = report.hasErrors ? 1 : 0;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      console.error(`control-plane bootstrap failed: ${message}`);
+      console.error(`control-plane ${command} failed: ${message}`);
       process.exitCode = 1;
     }
     return;
