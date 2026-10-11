@@ -50,7 +50,7 @@ Security impactがある場合は `docs/operations/development.md` のSecurity R
 
 ## 5. Promote Durable Knowledge
 
-IssueやIssueコメント内で合意された永続情報は対応するSSOTへ反映する。
+IssueやIssueコメントで合意した会話や合意履歴そのものをRepositoryへ複製しない。将来も有効な結果だけを対応するSSOTへ反映する。
 
 - Feature requirement → `docs/product/requirements.md`
 - New constraint → `docs/product/constraints.md`
@@ -61,7 +61,9 @@ IssueやIssueコメント内で合意された永続情報は対応するSSOTへ
 - Architecture decision → ADR
 - Current architecture → `ARCHITECTURE.md`
 
-Issueコメントを永続仕様として参照し続けない。
+Issueコメントを永続仕様として参照し続けない。合意の経緯を別のmeeting noteやapproval logへ形式的に複製しない。判断理由を将来残す必要がある場合はADRなど、その情報のSSOTへ必要なContext / Decision / Consequencesだけを記録する。
+
+重大なDecisionを伴う場合は、Durable Truthを更新し、必要なHuman Gateを通してから実装へ進む。小さなBug Fixや軽微変更では、文書変更と実装を形式的に別PRへ分ける必要はない。
 
 ## 6. Implement
 
