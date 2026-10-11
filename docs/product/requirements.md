@@ -64,7 +64,7 @@ CLI導入後も、Template / Workflow / ADR / Validation contractをDurable Trut
 
 **Statement**
 
-初期CLIは主要Desktop development environmentで利用できる設計とする。
+CLIは主要Desktop development environmentで利用できる設計とする。
 
 **Acceptance Criteria**
 
@@ -95,20 +95,21 @@ v0.1.0の初期CLIは `init / doctor / check` に限定し、必要性が未実�
 - [ ] `bootstrap / status / update / report / estimate` はv0.1.0のOut of Scopeとする。
 - [ ] `control-plane.yml`、Project Profile、Plugin system、Subagentsは初期MVPの必須要素にしない。
 
-### REQ-008: Read-only Bootstrap guidance
+### REQ-008: Read-only next-step guidance
 
 **Statement**
 
-利用者は、RepositoryからBootstrapの現在地、Human Gate、次Actionを決定論的に確認できる。
+利用者は、RepositoryからBootstrapの現在地、Human Gate、通常開発への移行、次Actionを決定論的に確認できる。
 
 **Acceptance Criteria**
 
-- [ ] `control-plane bootstrap [directory]` はRepositoryを変更しない。
+- [ ] `control-plane next [directory]` はRepositoryを変更しない。
+- [ ] `control-plane bootstrap [directory]` は後方互換のAliasとして `next` と同じ結果を返す。
 - [ ] Product Goal / Requirements / Constraints / Delivery / Architectureの進捗を表示する。
 - [ ] Bootstrap In Progressでは、`Next Step` / `Work On` / `Goal` / `Suggested Instruction` を表示し、人間が次に触る具体的なRepository pathを確認できる。
 - [ ] `Suggested Instruction` はAI Agentへ単体でコピーして意味が通るよう、対象pathを明示し、「上記ファイル」等の外部文脈依存表現を使わない。
 - [ ] `Suggested Instruction` は `AGENTS.md` と関連Workflowへの入口、現在のObjective、Work Scope、Stop Conditionに限定し、Workflow本文を重複しない。
-- [ ] Product Definition / Delivery Framing / Architecture Preparation / Architecture Gate / Bootstrap FinalizationをRepository状態から段階的に案内し、完了済み項目を次のWork Scopeへ含めない。
+- [ ] Product Definition / Delivery Framing / Architecture Preparation / Architecture Gate / Bootstrap Finalization / Ongoing DevelopmentをRepository状態から段階的に案内し、完了済み項目を次のWork Scopeへ含めない。
 - [ ] Proposed ADRがArchitecture Gate待ちなら、対象ADRをHuman Gateとして表示する。
 - [ ] Human Gateでは、Decisionの判断材料となる主要なRepository SSOTを `Review Inputs` として表示する。
 - [ ] Human Gateでは、承認対象となるADRのRepository pathを `Decision` として表示し、`Suggested Instruction` より人間の判断を優先する。
@@ -148,7 +149,7 @@ v0.1.0の初期CLIは `init / doctor / check` に限定し、必要性が未実�
 
 **Statement**
 
-利用者は、Bootstrap完了後も `control-plane bootstrap` からIssue-drivenな通常開発へ迷わず移行できる。
+利用者は、Bootstrap完了後も `control-plane next` からIssue-drivenな通常開発へ迷わず移行できる。
 
 **Acceptance Criteria**
 
